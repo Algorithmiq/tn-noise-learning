@@ -76,7 +76,10 @@ def load_results(path: str | Path) -> dict[str, Any]:
     if "probs" in data:
         data["probs"] = np.array(data["probs"], dtype=complex)
     if "params" in data:
-        data["params"] = [{k: np.array(v, dtype=complex) for k, v in p.items()} for p in data["params"]]
+        # JSON serialises dict keys as strings; restore the original int keys.
+        data["params"] = [
+            {int(k): np.array(v, dtype=complex) for k, v in p.items()} for p in data["params"]
+        ]
 
     for k in ("train_loss", "nll", "distance_to_tp", "lpdo_trace", "frob_distance", "test_loss"):
         if k in data:

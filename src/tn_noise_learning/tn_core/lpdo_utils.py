@@ -150,6 +150,16 @@ def compose_lpdos(lpdo_outer: LPDOSuperOperator1D, lpdo_inner: LPDOSuperOperator
     kraus_inds_1 = [ind for ind in list(kraus_1.outer_inds()) if ind not in phys_inds]
     kraus_inds_2 = [ind for ind in list(kraus_2.outer_inds()) if ind not in phys_inds]
 
+    # Reindex Kraus legs to fresh unique names to avoid collisions when the
+    # same LPDO is composed with itself (otherwise both copies would share
+    # Kraus index names and quimb would treat them as a single bond).
+    rename_1 = {ind: qtn.rand_uuid() for ind in kraus_inds_1}
+    rename_2 = {ind: qtn.rand_uuid() for ind in kraus_inds_2}
+    kraus_1.reindex_(rename_1)
+    kraus_2.reindex_(rename_2)
+    kraus_inds_1 = [rename_1[ind] for ind in kraus_inds_1]
+    kraus_inds_2 = [rename_2[ind] for ind in kraus_inds_2]
+
     kraus_pairs = list(zip(kraus_inds_1, kraus_inds_2, strict=False))
 
     tmp = "k_temp{}"
