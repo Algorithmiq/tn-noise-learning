@@ -2659,7 +2659,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.3,<2.4" },
     { name = "optax", specifier = ">=0.2.8" },
     { name = "qiskit", specifier = ">=2.2,<3" },
-    { name = "quimb", specifier = ">=1.11,<1.12" },
+    { name = "quimb", specifier = ">=1.11" },
     { name = "scipy", specifier = ">=1.13" },
     { name = "seaborn", marker = "extra == 'plot'", specifier = ">=0.13" },
     { name = "tqdm", specifier = ">=4.65" },
