@@ -1,0 +1,69 @@
+site_name: tn-noise-learning
+site_description: Tensor-network learning of quantum noise channels.
+
+watch:
+  - src/tn_noise_learning
+
+nav:
+  - Home: index.md
+  - Getting started: getting-started.md
+  - Concepts:
+      - LPDO: concepts/lpdo.md
+      - Noise channels: concepts/noise-channels.md
+      - QPT pipeline: concepts/qpt-pipeline.md
+      - Training: concepts/training.md
+  - Code reference: reference/
+
+plugins:
+  - search
+  - gen-files:
+      scripts:
+        - docs/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_section_style: spacy
+            show_submodules: false
+            heading_level: 3
+            merge_init_into_class: true
+            separate_signature: true
+            show_signature_annotations: true
+          inventories:
+            - https://numpy.org/doc/stable/objects.inv
+            - https://docs.python.org/3/objects.inv
+            - https://docs.scipy.org/doc/scipy/reference/objects.inv
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - def_list
+  - footnotes
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.magiclink
+  - pymdownx.arithmatex:
+      generic: true
+  - toc:
+      permalink: "#"
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js

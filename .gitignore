@@ -1,0 +1,61 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Test / coverage
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.hypothesis/
+
+# Type checkers
+.mypy_cache/
+.ruff_cache/
+.pyre/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# mkdocs build output
+/site/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Editor
+*.swp
+*~
+.idea/
+# .vscode/ is intentionally tracked (committed settings)
+
+# Project-specific: regenerable artefacts from the original sabrina workflow.
+# These are large / per-user and not source code.
+ctg_cache/
+opt_results/
+data/optimisation_data/
+data/simulated_experiments/
+
+# Large research artefacts inside examples/. These are paper-plot reference
+# data, not library inputs — kept out of git to stay under the 1MB pre-commit
+# threshold. Regenerate via examples/notebooks/generate_qpt_data.ipynb.
+examples/floquet/stefanos_data_from_*.json
+examples/**/*.json
+!examples/notebooks/*.json
+!examples/data/*.json
