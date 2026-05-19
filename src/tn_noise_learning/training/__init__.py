@@ -15,7 +15,7 @@ from .dataset import (
     preprocess_experiments,
 )
 from .losses import compute_metrics, kl_divergence, loss_fn, tp_penalty
-from .optimizer import optimize_trace_preservation, optimize_tn
+from .optimizer import optimize_tn, optimize_trace_preservation
 from .pipeline import train
 
 __all__ = [
