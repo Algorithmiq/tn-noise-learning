@@ -108,9 +108,19 @@ extend-select = [
 ignore = [
   "D203",             # one-blank-line-before-class (conflicts with D211)
   "D213",             # multi-line-summary-second-line (conflicts with D212)
+  "D107",             # missing docstring in __init__
+  "D417",             # undocumented-param
   "N803",             # arg name should be lowercase (quantum code uses N, K, U)
   "N806",             # variable in function should be lowercase
+  "ANN",              # full type-annotation coverage is a follow-up milestone
   "ANN401",           # Any in type hints is allowed
+  "B007",             # unused-loop-control-variable in tensor-index helper loops
+  "E501",             # rely on formatter + readability exceptions for long tensor expressions
+  "NPY002",           # legacy np.random APIs retained for reproducibility with SABRINA
+  "PT011",            # broad pytest.raises in compatibility tests
+  "SIM105",           # explicit try/except kept for readability
+  "SIM108",           # preserve explicit if/else blocks in numerical code
+  "TID252",           # allow relative intra-package imports
 ]
 
 [tool.ruff.lint.per-file-ignores]

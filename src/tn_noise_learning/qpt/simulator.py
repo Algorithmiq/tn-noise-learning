@@ -48,9 +48,7 @@ def build_qpt_mpo(
         elif input_states == "sic_states":
             single_qubit_input_states = sic_tetrahedron_states(type="pauli_symmetric")
         else:
-            raise ValueError(
-                f"Input states {input_states} not defined; only 'oc_pauli_eigenstates' and 'sic_states'."
-            )
+            raise ValueError(f"Input states {input_states} not defined; only 'oc_pauli_eigenstates' and 'sic_states'.")
     elif isinstance(input_states, list | np.ndarray):
         single_qubit_input_states = input_states
     else:
@@ -143,9 +141,7 @@ def _sample_single_shot(
 
         tn_transition_prob = qtn.TensorNetwork([in_state, qpt_mpo, tr_MPS])
         if draw_tn:
-            tn_transition_prob.draw(
-                color=["STATES", "POVMs", "NOISE", "UNITARY", "IN", "TRACING"], show_tags=False
-            )
+            tn_transition_prob.draw(color=["STATES", "POVMs", "NOISE", "UNITARY", "IN", "TRACING"], show_tags=False)
 
         probs = (tn_transition_prob.contract()).data
         try:
@@ -203,9 +199,7 @@ def simulate_experiments(
         preps_and_meas = [[s, None] for s in input_states]
 
     results = Parallel(n_jobs=joblib_workers)(
-        delayed(_sample_single_shot)(
-            p_and_m, qpt_mpo, num_qubits, num_states, size_povms, povm_normalisation, draw_tn
-        )
+        delayed(_sample_single_shot)(p_and_m, qpt_mpo, num_qubits, num_states, size_povms, povm_normalisation, draw_tn)
         for p_and_m in tqdm(preps_and_meas)
     )
 

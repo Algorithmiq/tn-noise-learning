@@ -51,9 +51,7 @@ def save_results(
         save_dict["probs"] = _make_json_compatible(res["probs"])
 
     if "params" in res:
-        save_dict["params"] = [
-            {k: np.array(v, dtype=str).tolist() for k, v in p.items()} for p in res["params"]
-        ]
+        save_dict["params"] = [{k: np.array(v, dtype=str).tolist() for k, v in p.items()} for p in res["params"]]
 
     seed = save_dict.get("seed", "")
     suffix = f"_seed{seed}" if seed != "" else ""
@@ -77,9 +75,7 @@ def load_results(path: str | Path) -> dict[str, Any]:
         data["probs"] = np.array(data["probs"], dtype=complex)
     if "params" in data:
         # JSON serialises dict keys as strings; restore the original int keys.
-        data["params"] = [
-            {int(k): np.array(v, dtype=complex) for k, v in p.items()} for p in data["params"]
-        ]
+        data["params"] = [{int(k): np.array(v, dtype=complex) for k, v in p.items()} for p in data["params"]]
 
     for k in ("train_loss", "nll", "distance_to_tp", "lpdo_trace", "frob_distance", "test_loss"):
         if k in data:

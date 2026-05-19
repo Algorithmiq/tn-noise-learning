@@ -164,9 +164,7 @@ def experiments_to_hyper_tn(experiments: list, states: list, povms: list):
     in_exp = np.swapaxes(in_exp, 0, 1)
     out_exp = np.swapaxes(out_exp, 0, 1)
 
-    exp_states = [
-        qtn.Tensor(sq, inds=("exp", f"k{j}", f"b{j}"), tags=(f"I{j}", "IN")) for j, sq in enumerate(in_exp)
-    ]
+    exp_states = [qtn.Tensor(sq, inds=("exp", f"k{j}", f"b{j}"), tags=(f"I{j}", "IN")) for j, sq in enumerate(in_exp)]
     exp_povms = [
         qtn.Tensor(sq, inds=("exp", f"bn{j}", f"kn{j}"), tags=(f"I{j}", "OUT")) for j, sq in enumerate(out_exp)
     ]
@@ -213,7 +211,9 @@ def evolve_hyper_tn(hyper_states_tn: TensorNetwork, u: QuantumCircuit | TensorNe
     return tn
 
 
-def preprocess_experiments(experiments: dict, batch_size: int = 32, shuffle: bool = True, build_marginals: str | None = None):
+def preprocess_experiments(
+    experiments: dict, batch_size: int = 32, shuffle: bool = True, build_marginals: str | None = None
+):
     """Tensorise + (optionally marginalise) + batch the experiment counts."""
     counts = experiments_to_tensors(experiments)
 
