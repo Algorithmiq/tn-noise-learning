@@ -36,7 +36,9 @@ def tp_penalty(self: TensorNetwork, join_outer_bonds: dict) -> jnp.ndarray:
         | {num_qubits - 1: jnp.array([jnp.eye(2)])}
     )
 
-    return jnp.real(qtn.tensor_network_distance(self.reindex(join_outer_bonds), id_mpo, backend="jax") / (2 ** (num_qubits / 2)))
+    return jnp.real(
+        qtn.tensor_network_distance(self.reindex(join_outer_bonds), id_mpo, backend="jax") / (2 ** (num_qubits / 2))
+    )
 
 
 def loss_fn(params: dict, batch_state_params: dict, batch_povm_params: dict, skeletons):
@@ -49,8 +51,12 @@ def loss_fn(params: dict, batch_state_params: dict, batch_povm_params: dict, ske
     batch_state = qtn.unpack(batch_state_params, skeletons[1])
     batch_povm = qtn.unpack(batch_povm_params, skeletons[2])
 
-    reindex_outer = {kraus_tn.outer_upper_ind_id.format(_): kraus_tn.outer_lower_ind_id.format(_) for _ in range(kraus_tn.L)}
-    reindex_inner = {kraus_tn.inner_upper_ind_id.format(_): kraus_tn.inner_lower_ind_id.format(_) for _ in range(kraus_tn.L)}
+    reindex_outer = {
+        kraus_tn.outer_upper_ind_id.format(_): kraus_tn.outer_lower_ind_id.format(_) for _ in range(kraus_tn.L)
+    }
+    reindex_inner = {
+        kraus_tn.inner_upper_ind_id.format(_): kraus_tn.inner_lower_ind_id.format(_) for _ in range(kraus_tn.L)
+    }
     kraus_tn_dag = (kraus_tn.H).reindex(reindex_outer | reindex_inner)
 
     lpdo = qtn.TensorNetwork([kraus_tn, kraus_tn_dag])
@@ -91,8 +97,10 @@ def compute_metrics(params, skeletons, test_data=None, true_lpdo=None, other_met
     batch_loss = jax.jit(loss_fn, static_argnums=[3])
     if test_data is not None:
         mean_test_loss = np.mean(
-            [batch_loss(params, batch_state_params, batch_povm_params, skeletons)[0]
-             for batch_state_params, batch_povm_params in test_data]
+            [
+                batch_loss(params, batch_state_params, batch_povm_params, skeletons)[0]
+                for batch_state_params, batch_povm_params in test_data
+            ]
         )
     else:
         mean_test_loss = None

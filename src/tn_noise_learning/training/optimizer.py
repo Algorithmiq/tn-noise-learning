@@ -38,7 +38,10 @@ def optimize_trace_preservation(
         }
         kraus_tn_dag = (kraus_tn.H).reindex(reindex_outer | reindex_inner)
         lpdo_local = qtn.TensorNetwork([kraus_tn, kraus_tn_dag])
-        return jnp.real(qtn.tensor_network_distance(lpdo_local.reindex(reindex_outer), id_mpo, backend="jax") / (2 ** (num_qubits / 2)))
+        return jnp.real(
+            qtn.tensor_network_distance(lpdo_local.reindex(reindex_outer), id_mpo, backend="jax")
+            / (2 ** (num_qubits / 2))
+        )
 
     lpdo_tn = lpdo.copy()
     num_qubits = lpdo_tn.L

@@ -44,7 +44,9 @@ def single_qubit_coherent_errors(params: np.ndarray) -> LPDOSuperOperator1D:
     return build_lpdo(tn_data=single_qubit_kraus)
 
 
-def two_qubit_depolarizing_error(p: float, num_qubits: int = 2, target_qubits: Sequence[int] = (0, 1)) -> list[np.ndarray]:
+def two_qubit_depolarizing_error(
+    p: float, num_qubits: int = 2, target_qubits: Sequence[int] = (0, 1)
+) -> list[np.ndarray]:
     r"""Kraus operators for an LPDO of a two-local depolarising channel.
 
     The two-qubit depolarising channel has the form
@@ -61,9 +63,7 @@ def two_qubit_depolarizing_error(p: float, num_qubits: int = 2, target_qubits: S
     alpha = np.sqrt(p_id - p_op)
     beta = np.sqrt(p_op)
 
-    depol_ops = np.array(
-        [[alpha * id, 0 * id, 0 * id, 0 * id], [beta * id, beta * x, beta * y, beta * z]]
-    )
+    depol_ops = np.array([[alpha * id, 0 * id, 0 * id, 0 * id], [beta * id, beta * x, beta * y, beta * z]])
 
     end_tn = np.array([[id]])
     mid_tn = np.array([[[id]]])
@@ -109,7 +109,9 @@ def dep2loc_odd(p: float, num_qubits: int) -> LPDOSuperOperator1D:
     return noise_lpdo
 
 
-def one_qubit_pauli_channel(coeffs: np.ndarray, num_qubits: int = 2, target_qubits: Sequence[int] = (0, 1)) -> list[np.ndarray]:
+def one_qubit_pauli_channel(
+    coeffs: np.ndarray, num_qubits: int = 2, target_qubits: Sequence[int] = (0, 1)
+) -> list[np.ndarray]:
     """Kraus operators of a tensor product of single-qubit Pauli channels.
 
     Args:
@@ -136,7 +138,9 @@ def one_qubit_pauli_channel(coeffs: np.ndarray, num_qubits: int = 2, target_qubi
     return kraus_ops
 
 
-def two_qubit_pauli_channel(coeffs: np.ndarray, num_qubits: int = 2, target_qubits: Sequence[int] = (0, 1)) -> list[np.ndarray]:
+def two_qubit_pauli_channel(
+    coeffs: np.ndarray, num_qubits: int = 2, target_qubits: Sequence[int] = (0, 1)
+) -> list[np.ndarray]:
     r"""Kraus operators of a two-qubit Pauli channel acting on neighbouring qubits.
 
     Args:
