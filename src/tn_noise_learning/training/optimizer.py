@@ -146,7 +146,8 @@ def optimize_tn(experiments, kraus_tn, optimizer, epochs: int = 10, true_lpdo=No
         "probs": [probs0.tolist()],
     }
     for key in metrics_vals:
-        metrics[key].append(metrics_vals[key])
+        val = metrics_vals[key]
+        metrics[key].append(val.tolist() if hasattr(val, "tolist") else val)
 
     opt_state = optimizer.init(kraus_params)
 
@@ -192,9 +193,15 @@ def optimize_tn(experiments, kraus_tn, optimizer, epochs: int = 10, true_lpdo=No
             # Early-stopping: if the relevant metric over the last 5 epochs is essentially flat, stop.
             if epoch > 5:
                 last_loss = metrics["frob_distance"][-5:] if true_lpdo is not None else metrics["test_loss"][-5:]
-                mean_diffs = np.abs([last_loss[k] - last_loss[k + 1] for k in range(len(last_loss) - 1)]).mean()
+                if not np.all(np.isfinite(last_loss)):
+                    print(
+                        f"\n > STOPPING TRAINING: NaN/Inf in last 5 test losses. "
+                        f"Stopped at epoch {epoch}, batch {b}."
+                    )
+                    break
+                mean_diffs = np.abs([last_loss[k] - last_loss[k+1] for k in range(len(last_loss)-1)]).mean()
                 if mean_diffs < 1e-7:
-                    print(  # noqa: T201
+                    print(
                         f"\n > STOPPING TRAINING: metric flat over 5 epochs ({mean_diffs}). "
                         f"Stopped at epoch {epoch}, batch {b}."
                     )
