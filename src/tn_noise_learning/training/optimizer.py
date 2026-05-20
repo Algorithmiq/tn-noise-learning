@@ -198,11 +198,10 @@ def optimize_tn(experiments, kraus_tn, optimizer, epochs: int = 10, true_lpdo=No
                 last_loss = metrics["frob_distance"][-5:] if true_lpdo is not None else metrics["test_loss"][-5:]
                 if not np.all(np.isfinite(last_loss)):
                     print(
-                        f"\n > STOPPING TRAINING: NaN/Inf in last 5 test losses. "
-                        f"Stopped at epoch {epoch}, batch {b}."
+                        f"\n > STOPPING TRAINING: NaN/Inf in last 5 test losses. Stopped at epoch {epoch}, batch {b}."
                     )
                     break
-                mean_diffs = np.abs([last_loss[k] - last_loss[k+1] for k in range(len(last_loss)-1)]).mean()
+                mean_diffs = np.abs([last_loss[k] - last_loss[k + 1] for k in range(len(last_loss) - 1)]).mean()
                 if mean_diffs < 1e-7:
                     print(
                         f"\n > STOPPING TRAINING: metric flat over 5 epochs ({mean_diffs}). "
