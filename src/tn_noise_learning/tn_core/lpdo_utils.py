@@ -285,7 +285,7 @@ def state_mpo(tensor_data: np.ndarray, output_ind: str = "k{}", input_ind: str =
 
     Per-site shape::
 
-        k --O-- b
+        k - -O - -b
     """
     return qtn.MPO_product_operator(tensor_data, upper_ind_id=output_ind, lower_ind_id=input_ind, tags="IN")
 
@@ -295,7 +295,7 @@ def povm_mpo(tensor_data: np.ndarray, output_ind: str = "kn{}", input_ind: str =
 
     Per-site shape::
 
-        bn --O-- kn
+        bn - -O - -kn
 
     The input tensors are transposed on their last two axes to match the
     contraction convention used when combining with an LPDO.

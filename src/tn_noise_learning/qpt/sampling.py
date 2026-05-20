@@ -40,7 +40,9 @@ def flatten_list(data):
     return flat_list
 
 
-def local_preps(num_qubits: int, locality: int = 3, num_preps: int | None = None, num_states: int = 6) -> list[list[int]]:
+def local_preps(
+    num_qubits: int, locality: int = 3, num_preps: int | None = None, num_states: int = 6
+) -> list[list[int]]:
     """Enumerate all length-``locality`` preparation tuples tiled across ``num_qubits``.
 
     Args:

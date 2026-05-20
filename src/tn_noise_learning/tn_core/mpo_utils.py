@@ -87,7 +87,9 @@ def two_qubit_operation_mpo(num_qubits: int, target_qubits, local_operators: lis
     return qtn.MatrixProductOperator(ops_list)
 
 
-def cu_to_mpo(num_qubits: int, control_qubit: int, target_qubit: int, u: np.ndarray = None) -> qtn.MatrixProductOperator:
+def cu_to_mpo(
+    num_qubits: int, control_qubit: int, target_qubit: int, u: np.ndarray = None
+) -> qtn.MatrixProductOperator:
     """Build a controlled-unitary MPO with given control and target qubits."""
     if u is None:
         u = np.eye(2)
@@ -180,9 +182,7 @@ def qc_to_mpo(
         uni_from_qiskit = Operator(qc).data
         frob_norm = np.linalg.norm(uni_from_mpo - uni_from_qiskit)
         if frob_norm > 1e-12:
-            raise ValueError(
-                f"Unitary from MPO does not match Qiskit reference: ‖ U_mpo - U_qiskit ‖ = {frob_norm}"
-            )
+            raise ValueError(f"Unitary from MPO does not match Qiskit reference: ‖ U_mpo - U_qiskit ‖ = {frob_norm}")
 
     return u_mpo
 
@@ -250,7 +250,9 @@ def unitary_to_ptm(u1: np.ndarray) -> np.ndarray:
 
     for i in range(1, 4):
         for j in range(1, 4):
-            ptm[i, j] = 0.5 * np.real(np.trace(np.dot(pauli_matrices[i], np.dot(u1, np.dot(pauli_matrices[j], np.conjugate(u1.T))))))
+            ptm[i, j] = 0.5 * np.real(
+                np.trace(np.dot(pauli_matrices[i], np.dot(u1, np.dot(pauli_matrices[j], np.conjugate(u1.T)))))
+            )
     return ptm
 
 
@@ -486,13 +488,20 @@ def invert_mpo(
         for _, t in enumerate(m.tensors):
             t.add_tag(local_tags_id.format(_))
         m.reindex_(
-            {old: new for old, new in zip(m.inner_inds(), (inner_inds_id.format(s + 1) for s in range(num_sites)), strict=False)}
+            {
+                old: new
+                for old, new in zip(
+                    m.inner_inds(), (inner_inds_id.format(s + 1) for s in range(num_sites)), strict=False
+                )
+            }
         )
 
     num_sites = mpo.L
     phys_dim = mpo.phys_dim()
 
-    mpo_A = qtn.MatrixProductOperator(mpo.arrays, shape="lrud", upper_ind_id="k{}", lower_ind_id="j{}", site_tag_id="I{}")
+    mpo_A = qtn.MatrixProductOperator(
+        mpo.arrays, shape="lrud", upper_ind_id="k{}", lower_ind_id="j{}", site_tag_id="I{}"
+    )
     add_tags_and_rename_inner_inds(mpo_A, local_tags_id="A{}", inner_inds_id="a_bond{}")
 
     mpo_Adag = qtn.MatrixProductOperator(
@@ -533,13 +542,19 @@ def invert_mpo(
             tn2 = qtn.TensorNetwork([mpo_B, mpo_A, mpo_Adag, mpo_Bdag, id_mpo_tn2])
 
             env_tensor = tn2.select(tags=[f"B{site}", f"Bdag{site}"], which="!any").contract(optimize="hyper")
-            env_tensor = env_tensor.trace(mpo_B.lower_ind_id.format(site), mpo_Bdag.upper_ind_id.format(site)) / phys_dim
+            env_tensor = (
+                env_tensor.trace(mpo_B.lower_ind_id.format(site), mpo_Bdag.upper_ind_id.format(site)) / phys_dim
+            )
 
             left_env_inds = [bd for bd in tn2[f"Bdag{site}"].inds if bd not in (mpo_Bdag.upper_ind_id.format(site))]
             right_env_inds = [bd for bd in tn2[f"B{site}"].inds if bd not in (mpo_B.lower_ind_id.format(site))]
             env_matrix = env_tensor.to_dense(left_env_inds, right_env_inds)
 
-            env_vector = tn1.select(tags=[f"Bdag{site}"], which="!any").contract(optimize="hyper").to_dense(tn2[f"Bdag{site}"].inds)
+            env_vector = (
+                tn1.select(tags=[f"Bdag{site}"], which="!any")
+                .contract(optimize="hyper")
+                .to_dense(tn2[f"Bdag{site}"].inds)
+            )
 
             b_opt = np.kron(scp.linalg.inv(env_matrix), np.eye(phys_dim)) @ env_vector
             if dtype is float:

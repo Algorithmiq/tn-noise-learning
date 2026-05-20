@@ -38,8 +38,13 @@ def _prepare_strategy(
 
     if strategy == "global_repeated":
         preps_and_meas = [
-            [(np.random.randint(0, num_states, size=num_qubits).tolist(),
-              np.random.randint(0, 3, size=num_qubits).tolist())] * shots_per_setting
+            [
+                (
+                    np.random.randint(0, num_states, size=num_qubits).tolist(),
+                    np.random.randint(0, 3, size=num_qubits).tolist(),
+                )
+            ]
+            * shots_per_setting
             for _ in range(num_shots // shots_per_setting)
         ]
         preps_and_meas = flatten_list(preps_and_meas)
@@ -138,9 +143,7 @@ def _cli() -> None:
     parser.add_argument("--noise", default="identity", help="Noise preset name (see select_noise_channel).")
     parser.add_argument("--num-shots", type=int, default=1000)
     parser.add_argument("--shots-per-setting", type=int, default=1)
-    parser.add_argument(
-        "--input-states", choices=["sic_states", "oc_pauli_eigenstates"], default="sic_states"
-    )
+    parser.add_argument("--input-states", choices=["sic_states", "oc_pauli_eigenstates"], default="sic_states")
     parser.add_argument("--strategy", choices=["local", "global", "global_repeated"], default="global_repeated")
     parser.add_argument("--output-dir", default="data/simulated_experiments")
     parser.add_argument("--joblib-workers", type=int, default=-1)

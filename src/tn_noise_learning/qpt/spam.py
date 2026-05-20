@@ -17,7 +17,9 @@ from ..tn_core.mpo_utils import circuit_to_mpo_ptm
 from .states import ic_condition_check, labels_to_tensors, pauli_eigenstates, rho_to_ptm, sic_tetrahedron_states
 
 
-def _combine_tns(mpo_after: qtn.MatrixProductOperator, mpo_before: qtn.MatrixProductOperator) -> qtn.MatrixProductOperator:
+def _combine_tns(
+    mpo_after: qtn.MatrixProductOperator, mpo_before: qtn.MatrixProductOperator
+) -> qtn.MatrixProductOperator:
     """Adapter for `quimb.tensor.apply_mpo` that combines two MPOs without contracting them.
 
     Acts like matrix multiplication: ``MPO = MPO_after @ MPO_before``.
@@ -193,9 +195,7 @@ def _sample_single_shot_spam(
 
         tn_transition_prob = qtn.TensorNetwork([in_state, qpt_mpo, tr_MPS])
         if draw_tn:
-            tn_transition_prob.draw(
-                color=["STATES", "POVM", "NOISE", "UNITARY", "IN", "TRACING"], show_tags=False
-            )
+            tn_transition_prob.draw(color=["STATES", "POVM", "NOISE", "UNITARY", "IN", "TRACING"], show_tags=False)
 
         probs = (tn_transition_prob.contract()).data
         try:

@@ -157,7 +157,9 @@ def dep2loc_mpo(p: float, q1: int, q2: int, num_qubits: int) -> qtn.MatrixProduc
     if q1 < q2:
         for q in range(q1):
             tensors_data.append(iden_mat.reshape(1, 4, 4) if q == 0 else iden_mat.reshape(1, 1, 4, 4))
-        tensors_data.append(target_qubit_tensors.reshape(2, 4, 4) if q1 == 0 else target_qubit_tensors.reshape(1, 2, 4, 4))
+        tensors_data.append(
+            target_qubit_tensors.reshape(2, 4, 4) if q1 == 0 else target_qubit_tensors.reshape(1, 2, 4, 4)
+        )
         for _q in range(q1 + 1, q2):
             tensors_data.append(trivial_qubit_tensors)
         tensors_data.append(
@@ -168,7 +170,9 @@ def dep2loc_mpo(p: float, q1: int, q2: int, num_qubits: int) -> qtn.MatrixProduc
     if q1 > q2:
         for q in range(q2):
             tensors_data.append(iden_mat.reshape(1, 4, 4) if q == 0 else iden_mat.reshape(1, 1, 4, 4))
-        tensors_data.append(target_qubit_tensors.reshape(2, 4, 4) if q2 == 0 else target_qubit_tensors.reshape(1, 2, 4, 4))
+        tensors_data.append(
+            target_qubit_tensors.reshape(2, 4, 4) if q2 == 0 else target_qubit_tensors.reshape(1, 2, 4, 4)
+        )
         for _q in range(q2 + 1, q1):
             tensors_data.append(trivial_qubit_tensors)
         tensors_data.append(
@@ -254,8 +258,14 @@ def two_local_pauli_lindblad_mpo(
 ) -> qtn.MatrixProductOperator:
     """MPO of a single two-qubit Pauli-Lindblad link in PTM form."""
     id = np.eye(4)
-    diag_block = np.array([np.diag([1.0, 0.0, 0.0, 0.0]), np.diag([0.0, 1.0, 0.0, 0.0]),
-                           np.diag([0.0, 0.0, 1.0, 0.0]), np.diag([0.0, 0.0, 0.0, 1.0])])
+    diag_block = np.array(
+        [
+            np.diag([1.0, 0.0, 0.0, 0.0]),
+            np.diag([0.0, 1.0, 0.0, 0.0]),
+            np.diag([0.0, 0.0, 1.0, 0.0]),
+            np.diag([0.0, 0.0, 0.0, 1.0]),
+        ]
+    )
     spl_block = _two_local_pauli_lindblad_block(coeffs)
 
     tensors_data: list[np.ndarray] = []
