@@ -67,7 +67,7 @@ def loss_fn(params: dict, batch_state_params: dict, batch_povm_params: dict, ske
     )
 
     probs = jnp.clip(
-        jnp.real(tn_transition_prob.contract(output_inds=["exp"], backend="jax").data),
+        jnp.real(tn_transition_prob.contract(output_inds=["exp"],optimize="auto-hq", backend="jax").data),
         min=1e-15,
     )
 
