@@ -8,13 +8,17 @@ construction works on any qubit connectivity without compression. Raw states ent
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import numpy as np
 import quimb.tensor as qtn
-from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 
 from .lpdo import input_ind, site_tag
+
+if TYPE_CHECKING:
+    from jax import Array
+    from qiskit import QuantumCircuit
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +33,7 @@ def raw_ind(site: int, *, dagger: bool = False) -> str:
 
 
 def _schmidt_pair(gate: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Split a 4x4 gate on qubits ``(a, b)`` (Qiskit little-endian) into ``A[α, out_a, in_a]``, ``B[α, out_b, in_b]``."""
+    """Split a 4x4 gate on qubits ``(a, b)`` (little-endian) into ``A[α, out_a, in_a]`` and ``B[α, out_b, in_b]``."""
     matrix = gate.reshape(2, 2, 2, 2).transpose(1, 3, 0, 2).reshape(4, 4)
     u, s, vh = np.linalg.svd(matrix)
     rank = int(np.sum(s > SCHMIDT_TOL))
@@ -47,7 +51,11 @@ def circuit_network(circuit: QuantumCircuit) -> qtn.TensorNetwork:
     identity = np.eye(4, dtype=complex).reshape(2, 2, 2, 2)
     tn = qtn.TensorNetwork(
         [
-            qtn.Tensor(identity, inds=(raw_ind(j), raw_ind(j, dagger=True), input_ind(j), input_ind(j, dagger=True)), tags=site_tag(j))
+            qtn.Tensor(
+                identity,
+                inds=(raw_ind(j), raw_ind(j, dagger=True), input_ind(j), input_ind(j, dagger=True)),
+                tags=site_tag(j),
+            )
             for j in range(num_sites)
         ]
     )
@@ -57,7 +65,9 @@ def circuit_network(circuit: QuantumCircuit) -> qtn.TensorNetwork:
             continue
         sites = [circuit.find_bit(q).index for q in instruction.qubits]
         if len(sites) > 2:
-            raise ValueError(f"Gate {operation.name} acts on {len(sites)} qubits; only one- and two-qubit gates are supported.")
+            raise ValueError(
+                f"Gate {operation.name} acts on {len(sites)} qubits; only one- and two-qubit gates are supported."
+            )
         try:
             gate = np.asarray(Operator(operation).data, dtype=complex)
         except Exception as error:
@@ -68,21 +78,27 @@ def circuit_network(circuit: QuantumCircuit) -> qtn.TensorNetwork:
             old_ket, old_bra = qtn.rand_uuid("s"), qtn.rand_uuid("s")
             tn.reindex_({input_ind(site): old_ket, input_ind(site, dagger=True): old_bra})
             tn.add_tensor(qtn.Tensor(piece, inds=(bond_ket, input_ind(site), old_ket), tags=site_tag(site)))
-            tn.add_tensor(qtn.Tensor(piece.conj(), inds=(bond_bra, input_ind(site, dagger=True), old_bra), tags=site_tag(site)))
+            tn.add_tensor(
+                qtn.Tensor(piece.conj(), inds=(bond_bra, input_ind(site, dagger=True), old_bra), tags=site_tag(site))
+            )
     for j in range(num_sites):
         tn.contract_tags_(site_tag(j))
     tn.fuse_multibonds_()
     tn.squeeze_()
     largest = max(t.size for t in tn)
     if largest > LARGE_TENSOR_SIZE:
-        logger.warning("Circuit network has a site tensor with %d elements; the circuit is deep for an uncompressed decomposition.", largest)
+        logger.warning(
+            "Circuit network has a site tensor with %d elements; the circuit is deep for an uncompressed decomposition",
+            largest,
+        )
     return tn
 
 
-def product_state_network(states: np.ndarray, *, raw: bool = True) -> qtn.TensorNetwork:
-    """Batched product states ``states[j, exp]`` (shape ``(num_sites, batch, 2, 2)``) as tensors ``(exp, ket_j, bra_j)``.
+def product_state_network(states: np.ndarray | Array, *, raw: bool = True) -> qtn.TensorNetwork:
+    """Batched product states ``states[j, exp]`` of shape ``(num_sites, batch, 2, 2)`` as site tensors.
 
-    With ``raw=True`` the legs are ``p{j}, q{j}`` (to be evolved by a circuit), otherwise ``k{j}, b{j}``.
+    Each tensor has legs ``(exp, ket_j, bra_j)``: ``p{j}, q{j}`` with ``raw=True`` (to be evolved by a circuit),
+    otherwise ``k{j}, b{j}``.
     """
     ket, bra = (raw_ind, raw_ind) if raw else (input_ind, input_ind)
     return qtn.TensorNetwork(

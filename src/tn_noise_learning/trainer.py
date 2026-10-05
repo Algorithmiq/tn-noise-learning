@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
 
 import jax
 import jax.numpy as jnp
@@ -13,10 +14,12 @@ import optax
 import quimb.tensor as qtn
 
 from .circuits import circuit_network
-from .dataset import NoiseDataset
 from .history import History
 from .losses import LossTerm, negative_log_likelihood, probabilities, tp_penalty
 from .lpdo import LPDO, full_network
+
+if TYPE_CHECKING:
+    from .dataset import NoiseDataset
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +93,32 @@ def project_trace_preserving(model: LPDO, steps: int) -> LPDO:
     return LPDO.from_network(topology, optimizer.optimize(steps))
 
 
+@dataclass
+class _Selection:
+    """Best-model tracking and early stopping on one monitored metric."""
+
+    patience: int
+    tolerance: float
+    best_params: dict
+    best_value: float = np.inf
+    best_epoch: int = 0
+    stale_epochs: int = 0
+
+    def update(self, value: float, params: dict, epoch: int) -> bool:
+        """Record an epoch; return ``True`` when training should stop."""
+        if not np.isfinite(value):
+            logger.warning("Stopping: monitored metric is not finite at epoch %d.", epoch)
+            return True
+        improved = value < self.best_value - self.tolerance
+        if value < self.best_value:
+            self.best_params, self.best_value, self.best_epoch = params, value, epoch
+        self.stale_epochs = 0 if improved else self.stale_epochs + 1
+        if self.stale_epochs >= self.patience:
+            logger.info("Stopping: no improvement for %d epochs.", self.patience)
+            return True
+        return False
+
+
 class Trainer:
     """Fit an [`LPDO`][tn_noise_learning.lpdo.LPDO] to a [`NoiseDataset`][tn_noise_learning.dataset.NoiseDataset]."""
 
@@ -115,86 +144,91 @@ class Trainer:
         if test is None:
             train, test = train.split(cfg.test_fraction, cfg.seed)
         ideal = train.ideal_channel if ideal_channel is None else ideal_channel
-        topology = model.topology
-        circuit_tn = None if train.circuit is None else circuit_network(train.circuit)
-
         if cfg.tp_warmstart_steps > 0:
             model.tensors = project_trace_preserving(model, cfg.tp_warmstart_steps).tensors
+
         params, skeleton = qtn.pack(model.kraus_network())
+        rebuild = lambda p: LPDO.from_network(model.topology, qtn.unpack(p, skeleton))  # noqa: E731
+        term_names, weights_at, step, evaluate_loss, opt_state = self._compile(model, params, skeleton, train)
+        history = History(num_sites=model.num_sites)
+        selection = _Selection(cfg.patience, cfg.tolerance, params)
+        global_step = 0
+        epoch = 0
+        try:
+            for epoch in range(1, cfg.epochs + 1):
+                sums = np.zeros(len(term_names) + 1)
+                for batch in train.batches(cfg.batch_size, shuffle=True, seed=cfg.seed + epoch):
+                    params, opt_state, total, values = step(
+                        params, opt_state, batch.states, batch.povms, weights_at(global_step)
+                    )
+                    sums += np.concatenate([[float(total)], np.asarray(values)])
+                    global_step += 1
+                    if cfg.tp_project_every and global_step % cfg.tp_project_every == 0:
+                        projected = project_trace_preserving(rebuild(params), cfg.tp_project_steps)
+                        params = dict(zip(params, qtn.pack(projected.kraus_network())[0].values(), strict=True))
+                num_batches = len(train) // cfg.batch_size
+                test_loss = np.mean(
+                    [
+                        float(evaluate_loss(params, b.states, b.povms, weights_at(global_step))[0])
+                        for b in test.batches(min(cfg.batch_size, len(test)), shuffle=False, drop_last=False)
+                    ]
+                )
+                metrics = {"train_loss": sums[0] / num_batches, "test_loss": float(test_loss)}
+                metrics |= {name: sums[i + 1] / num_batches for i, name in enumerate(term_names)}
+                current = rebuild(params)
+                metrics |= self._model_metrics(current, ideal)
+                history.append(metrics, current.tensors if cfg.snapshot_params else None)
+                if epoch % cfg.log_every == 0:
+                    logger.info(
+                        "epoch %3d/%d  %s", epoch, cfg.epochs, "  ".join(f"{k}={v:.4g}" for k, v in metrics.items())
+                    )
+                if cfg.monitor not in metrics:
+                    raise KeyError(f"monitor {cfg.monitor!r} is not a recorded metric: {sorted(metrics)}")
+                if selection.update(metrics[cfg.monitor], params, epoch):
+                    break
+        except KeyboardInterrupt:
+            logger.warning("Training interrupted at epoch %d; keeping the best model so far.", epoch)
+
+        model.tensors = rebuild(selection.best_params).tensors
+        history.best_epoch = selection.best_epoch
+        return history
+
+    def _model_metrics(self, model: LPDO, ideal: LPDO | None) -> dict[str, float]:
+        """Trace, distance to the ideal channel when known, and user metrics."""
+        metrics = {"trace": model.trace()}
+        if ideal is not None:
+            metrics["distance_to_ideal"] = model.distance(ideal)
+        return metrics | {name: float(metric(model)) for name, metric in self.config.metrics.items()}
+
+    def _compile(self, model: LPDO, params: dict, skeleton: qtn.TensorNetwork, train: NoiseDataset) -> tuple:
+        """Build the jitted loss and update step.
+
+        Returns the loss-term names, the weight schedule, the step function, the jitted loss and the optimizer state.
+        """
+        cfg = self.config
+        topology = model.topology
+        circuit_tn = None if train.circuit is None else circuit_network(train.circuit)
         terms: dict[str, LossTerm] = {"nll": negative_log_likelihood, "tp_penalty": tp_penalty}
         terms |= {name: term for name, (term, _) in cfg.extra_loss_terms.items()}
         schedules: list[Schedule] = [1.0, cfg.tp_weight, *(w for _, w in cfg.extra_loss_terms.values())]
         optimizer = cfg.optimizer(cfg.learning_rate)
 
-        def loss(params: dict, states: jnp.ndarray, povms: jnp.ndarray, weights: jnp.ndarray) -> tuple[jnp.ndarray, jnp.ndarray]:
+        def loss(params: dict, states: jnp.ndarray, povms: jnp.ndarray, weights: jnp.ndarray) -> tuple:
             lpdo_tn = full_network(qtn.unpack(params, skeleton), topology)
             probs = probabilities(lpdo_tn, states, povms, circuit_tn, optimize=cfg.contract_optimize)
             values = jnp.stack([term(lpdo_tn, probs) for term in terms.values()])
             return jnp.sum(weights * values), values
 
         @jax.jit
-        def step(params: dict, opt_state: optax.OptState, states: jnp.ndarray, povms: jnp.ndarray, weights: jnp.ndarray) -> tuple:
+        def step(
+            params: dict, opt_state: optax.OptState, states: jnp.ndarray, povms: jnp.ndarray, weights: jnp.ndarray
+        ) -> tuple:
             (total, values), grads = jax.value_and_grad(loss, has_aux=True)(params, states, povms, weights)
             grads = jax.tree_util.tree_map(jnp.conj, grads)
             updates, opt_state = optimizer.update(grads, opt_state, params)
             return optax.apply_updates(params, updates), opt_state, total, values
 
-        evaluate_loss = jax.jit(loss)
-
-        def current_model(params: dict) -> LPDO:
-            return LPDO.from_network(topology, qtn.unpack(params, skeleton))
-
         def weights_at(step_index: int) -> jnp.ndarray:
             return jnp.array([evaluate_schedule(s, step_index) for s in schedules])
 
-        history = History(num_sites=topology.num_sites)
-        opt_state = optimizer.init(params)
-        best_params, best_value, best_epoch, stale_epochs = params, np.inf, 0, 0
-        global_step = 0
-        try:
-            for epoch in range(1, cfg.epochs + 1):
-                sums = np.zeros(len(terms) + 1)
-                num_batches = 0
-                for batch in train.batches(cfg.batch_size, shuffle=True, seed=cfg.seed + epoch):
-                    params, opt_state, total, values = step(params, opt_state, batch.states, batch.povms, weights_at(global_step))
-                    global_step += 1
-                    sums += np.concatenate([[float(total)], np.asarray(values)])
-                    num_batches += 1
-                    if cfg.tp_project_every and global_step % cfg.tp_project_every == 0:
-                        projected = project_trace_preserving(current_model(params), cfg.tp_project_steps)
-                        params = dict(zip(params, qtn.pack(projected.kraus_network())[0].values(), strict=True))
-
-                weights = weights_at(global_step)
-                test_batches = test.batches(min(cfg.batch_size, len(test)), shuffle=False, drop_last=False)
-                test_loss = np.mean([float(evaluate_loss(params, b.states, b.povms, weights)[0]) for b in test_batches])
-                model_now = current_model(params)
-                metrics = {"train_loss": sums[0] / num_batches, "test_loss": test_loss}
-                metrics |= {name: sums[i + 1] / num_batches for i, name in enumerate(terms)}
-                metrics["trace"] = model_now.trace()
-                if ideal is not None:
-                    metrics["distance_to_ideal"] = model_now.distance(ideal)
-                metrics |= {name: float(metric(model_now)) for name, metric in cfg.metrics.items()}
-                history.append(metrics, model_now.tensors if cfg.snapshot_params else None)
-                if epoch % cfg.log_every == 0:
-                    logger.info("epoch %3d/%d  %s", epoch, cfg.epochs, "  ".join(f"{k}={v:.4g}" for k, v in metrics.items()))
-
-                if cfg.monitor not in metrics:
-                    raise KeyError(f"monitor {cfg.monitor!r} is not a recorded metric: {sorted(metrics)}")
-                value = metrics[cfg.monitor]
-                if not np.isfinite(value):
-                    logger.warning("Stopping: %s is not finite at epoch %d.", cfg.monitor, epoch)
-                    break
-                if value < best_value:
-                    stale_epochs = 0 if value < best_value - cfg.tolerance else stale_epochs + 1
-                    best_params, best_value, best_epoch = params, value, epoch
-                else:
-                    stale_epochs += 1
-                if stale_epochs >= cfg.patience:
-                    logger.info("Stopping: no improvement of %s for %d epochs.", cfg.monitor, cfg.patience)
-                    break
-        except KeyboardInterrupt:
-            logger.warning("Training interrupted at epoch %d; keeping the best model so far.", epoch)
-
-        model.tensors = current_model(best_params).tensors
-        history.best_epoch = best_epoch
-        return history
+        return list(terms), weights_at, step, jax.jit(loss), optimizer.init(params)

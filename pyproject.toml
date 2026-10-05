@@ -67,61 +67,49 @@ packages = ["src/tn_noise_learning"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = ["--import-mode=importlib", "-ra", "--strict-markers"]
+addopts = ["--import-mode=importlib", "-ra", "--strict-markers", "--strict-config"]
 testpaths = ["tests"]
-pythonpath = ["src"]
-markers = ["slow: mark test as slow (>=1 minute runtime)"]
+markers = ["slow: mark test as slow (>= 10 s runtime)"]
 filterwarnings = [
+  "ignore:Couldn't import `kahypar`:UserWarning",
   "ignore::DeprecationWarning:numpy.ctypeslib",
-  "ignore::UserWarning:quimb.core",
 ]
+
+
+[tool.coverage.run]
+branch = true
+source = ["src/tn_noise_learning"]
+
+[tool.coverage.report]
+exclude_also = ["if TYPE_CHECKING:", "raise ImportError"]
 
 
 [tool.ruff]
 target-version = "py312"
 line-length = 120
-exclude = ["docs", "examples"]
+exclude = ["docs"]
 
 [tool.ruff.format]
 docstring-code-format = true
-docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
-extend-select = [
-  "E", "W", "F",     # pyflakes / pycodestyle
-  "I",                # isort
-  "N",                # pep8-naming
-  "D",                # pydocstyle
-  "ANN",              # flake8-annotations
-  "UP",               # pyupgrade
-  "B",                # flake8-bugbear
-  "SIM",              # flake8-simplify
-  "NPY",              # NumPy-specific
-  "PT",               # pytest-style
-  "RET",              # flake8-return
-  "TID",              # tidy imports
-]
+select = ["ALL"]
 ignore = [
-  "D203",             # one-blank-line-before-class (conflicts with D211)
-  "D213",             # multi-line-summary-second-line (conflicts with D212)
-  "D107",             # missing docstring in __init__
-  "D417",             # undocumented-param
-  "N803",             # arg name should be lowercase (quantum code uses N, K, U)
-  "N806",             # variable in function should be lowercase
-  "ANN",              # full type-annotation coverage is a follow-up milestone
-  "ANN401",           # Any in type hints is allowed
-  "B007",             # unused-loop-control-variable in tensor-index helper loops
-  "E501",             # rely on formatter + readability exceptions for long tensor expressions
-  "NPY002",           # legacy np.random APIs retained for reproducibility with SABRINA
-  "PT011",            # broad pytest.raises in compatibility tests
-  "SIM105",           # explicit try/except kept for readability
-  "SIM108",           # preserve explicit if/else blocks in numerical code
-  "TID252",           # allow relative intra-package imports
+  "D203", "D213",       # docstring style choices that conflict with D211 / D212
+  "D107",               # __init__ docstrings: the class docstring documents the arguments
+  "COM812", "ISC001",   # handled by the formatter
+  "ANN401",             # Any is allowed where quimb/optax types are untyped
+  "N803", "N806",       # uppercase quantum identifiers (K, V, U)
+  "PLR0913",            # configs and constructors take many arguments
+  "PLR2004",            # 2, 4 and 16 are the physics, not magic numbers
+  "EM101", "EM102", "TRY003",  # f-string exception messages
+  "FBT001", "FBT002",   # boolean flags such as shuffle=True
+  "RUF001", "RUF002", "RUF003",  # unicode math (Λ, ‖·‖, →) in docstrings and comments
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**/*.py" = ["D", "ANN", "S101"]
-"src/tn_noise_learning/**/__init__.py" = ["F401"]
+"tests/**" = ["D", "ANN", "S101", "INP001", "PLR0913", "PT011", "SLF001", "E731", "ARG"]
+"examples/**" = ["T201", "INP001", "D"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -134,11 +122,7 @@ required-imports = ["from __future__ import annotations"]
 python_version = "3.12"
 files = ["src/tn_noise_learning"]
 ignore_missing_imports = true
-warn_redundant_casts = true
-warn_unused_ignores = false
-disallow_untyped_defs = false   # follow-up milestone: turn on
+disallow_untyped_defs = true
 check_untyped_defs = true
-
-[[tool.mypy.overrides]]
-module = ["tests.*"]
-disallow_untyped_defs = false
+warn_redundant_casts = true
+warn_unused_ignores = true

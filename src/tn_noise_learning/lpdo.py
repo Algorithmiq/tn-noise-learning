@@ -15,13 +15,17 @@ the Kraus half by [`full_network`][tn_noise_learning.lpdo.full_network] with the
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import numpy as np
 import quimb.tensor as qtn
 import zarr
 
+from ._io import read_array, read_attr
 from .topology import Topology
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 KRAUS_TAG = "V"
 DAGGER_TAG = "Vdag"
@@ -95,7 +99,9 @@ class LPDO:
         for j, t in enumerate(self.tensors):
             expected = self.topology.degree(j) + 3
             if t.ndim != expected or t.shape[-2:] != (2, 2):
-                raise ValueError(f"Site {j}: expected shape (*{self.topology.degree(j)} bonds, kraus, 2, 2), got {t.shape}.")
+                raise ValueError(
+                    f"Site {j}: expected shape (*{self.topology.degree(j)} bonds, kraus, 2, 2), got {t.shape}."
+                )
         for i, j in self.topology.edges:
             if self.bond_size(i, j) != self.bond_size(j, i):
                 raise ValueError(f"Bond sizes on edge ({i}, {j}) disagree.")
@@ -133,17 +139,32 @@ class LPDO:
     @classmethod
     def identity(cls, topology: Topology) -> LPDO:
         """Identity channel: one Kraus operator ``𝟙`` per site, all bonds of size one."""
-        return cls(topology, [np.eye(2, dtype=complex).reshape((1,) * (topology.degree(j) + 1) + (2, 2)) for j in range(topology.num_sites)])
+        return cls(
+            topology,
+            [
+                np.eye(2, dtype=complex).reshape((1,) * (topology.degree(j) + 1) + (2, 2))
+                for j in range(topology.num_sites)
+            ],
+        )
 
     @classmethod
     def from_network(cls, topology: Topology, kraus_tn: qtn.TensorNetwork) -> LPDO:
         """Rebuild from a Kraus network with the index names of [`kraus_inds`][tn_noise_learning.lpdo.kraus_inds]."""
-        return cls(topology, [np.asarray(kraus_tn[site_tag(j)].transpose(*kraus_inds(topology, j)).data) for j in range(topology.num_sites)])
+        return cls(
+            topology,
+            [
+                np.asarray(kraus_tn[site_tag(j)].transpose(*kraus_inds(topology, j)).data)
+                for j in range(topology.num_sites)
+            ],
+        )
 
     def kraus_network(self) -> qtn.TensorNetwork:
         """Tensor network of the Kraus half, tagged ``I{j}`` and ``V``."""
         return qtn.TensorNetwork(
-            [qtn.Tensor(t, inds=kraus_inds(self.topology, j), tags=(site_tag(j), KRAUS_TAG)) for j, t in enumerate(self.tensors)]
+            [
+                qtn.Tensor(t, inds=kraus_inds(self.topology, j), tags=(site_tag(j), KRAUS_TAG))
+                for j, t in enumerate(self.tensors)
+            ]
         )
 
     def network(self) -> qtn.TensorNetwork:
@@ -179,8 +200,9 @@ class LPDO:
     @classmethod
     def from_group(cls, group: zarr.Group) -> LPDO:
         """Read an LPDO written by [`to_group`][tn_noise_learning.lpdo.LPDO.to_group]."""
-        topology = Topology(int(group.attrs["num_sites"]), tuple(tuple(e) for e in group.attrs["edges"]))  # type: ignore[arg-type]
-        return cls(topology, [group[f"site_{j}"][:] for j in range(topology.num_sites)])  # type: ignore[index]
+        edges = tuple((int(i), int(j)) for i, j in read_attr(group, "edges"))
+        topology = Topology(int(read_attr(group, "num_sites")), edges)
+        return cls(topology, [read_array(group, f"site_{j}") for j in range(topology.num_sites)])
 
     def save(self, path: str | Path) -> None:
         """Save to a zarr store at ``path``."""

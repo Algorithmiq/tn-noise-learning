@@ -3,19 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import zarr
 
+from ._io import read_array, read_attr
+
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from matplotlib.figure import Figure
 
 
 @dataclass
 class History:
-    """Metric curves and optional parameter snapshots recorded by [`Trainer.fit`][tn_noise_learning.trainer.Trainer.fit].
+    """Metric curves and optional parameter snapshots recorded by [`Trainer`][tn_noise_learning.trainer.Trainer].
 
     Args:
         metrics: one list per metric name, one value per epoch.
@@ -55,19 +58,22 @@ class History:
     def load(cls, path: str | Path) -> History:
         """Read a history written by [`save`][tn_noise_learning.history.History.save]."""
         group = zarr.open_group(str(path), mode="r")
-        metrics = {str(name): list(group[f"metrics/{name}"][:]) for name in group.attrs["metric_names"]}  # type: ignore[union-attr,index]
+        metrics = {
+            str(name): read_array(group, f"metrics/{name}").tolist() for name in read_attr(group, "metric_names")
+        }
         params = []
         if "params" in group:
-            epochs = sorted(group["params"].keys(), key=lambda k: int(k.split("_")[1]))  # type: ignore[union-attr]
-            for epoch in epochs:
-                sites = sorted(group[f"params/{epoch}"].keys(), key=lambda k: int(k.split("_")[1]))  # type: ignore[union-attr]
-                params.append([group[f"params/{epoch}/{site}"][:] for site in sites])  # type: ignore[index]
-        best = group.attrs["best_epoch"]
-        num_sites = group.attrs["num_sites"]
-        return cls(metrics, params, None if best is None else int(best), None if num_sites is None else int(num_sites))  # type: ignore[arg-type]
+            params_group = zarr.open_group(str(path), mode="r", path="params")
+            for epoch in sorted(params_group.keys(), key=lambda k: int(k.split("_")[1])):
+                epoch_group = zarr.open_group(str(path), mode="r", path=f"params/{epoch}")
+                sites = sorted(epoch_group.keys(), key=lambda k: int(k.split("_")[1]))
+                params.append([read_array(epoch_group, site) for site in sites])
+        best = read_attr(group, "best_epoch")
+        num_sites = read_attr(group, "num_sites")
+        return cls(metrics, params, None if best is None else int(best), None if num_sites is None else int(num_sites))
 
     def plot(self, path: str | Path | None = None) -> Figure:
         """Plot the metric curves with [`plot_history`][tn_noise_learning.plotting.plot_history]."""
-        from .plotting import plot_history
+        from .plotting import plot_history  # noqa: PLC0415  (avoids a circular import)
 
         return plot_history(self, path)

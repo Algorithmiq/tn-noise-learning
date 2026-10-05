@@ -8,18 +8,22 @@ multinomial draw. Effect labels follow the convention ``2 * basis + bit``.
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import TYPE_CHECKING
 
 import numpy as np
 import quimb.tensor as qtn
-from qiskit import QuantumCircuit
 
 from .channels import pauli_eigenstates
 from .circuits import apply_circuit, raw_ind
 from .dataset import NoiseDataset
 from .lpdo import LPDO, input_ind, output_ind, site_tag
 
+if TYPE_CHECKING:
+    from qiskit import QuantumCircuit
+
 MAX_SAMPLED_SITES = 20
-Setting = tuple[Sequence[int], Sequence[int]]
+Labels = Sequence[int] | np.ndarray
+Setting = tuple[Labels, Labels]
 
 
 def _check_bases(povms: np.ndarray) -> None:
@@ -30,8 +34,8 @@ def _check_bases(povms: np.ndarray) -> None:
 def outcome_distribution(
     channel: LPDO,
     circuit: QuantumCircuit | None,
-    state_labels: Sequence[int],
-    basis_labels: Sequence[int],
+    state_labels: Labels,
+    basis_labels: Labels,
     states: np.ndarray,
     povms: np.ndarray,
     optimize: str = "auto-hq",
@@ -41,15 +45,23 @@ def outcome_distribution(
     if n > MAX_SAMPLED_SITES:
         raise ValueError(f"Exact sampling enumerates 2**n outcomes; n must be at most {MAX_SAMPLED_SITES}, got {n}.")
     prep = qtn.TensorNetwork(
-        [qtn.Tensor(states[j, state_labels[j]], inds=(raw_ind(j), raw_ind(j, dagger=True)), tags=site_tag(j)) for j in range(n)]
+        [
+            qtn.Tensor(states[j, state_labels[j]], inds=(raw_ind(j), raw_ind(j, dagger=True)), tags=site_tag(j))
+            for j in range(n)
+        ]
     )
     if circuit is None:
-        prep.reindex_({raw_ind(j): input_ind(j) for j in range(n)} | {raw_ind(j, dagger=True): input_ind(j, dagger=True) for j in range(n)})
+        prep.reindex_(
+            {raw_ind(j): input_ind(j) for j in range(n)}
+            | {raw_ind(j, dagger=True): input_ind(j, dagger=True) for j in range(n)}
+        )
     else:
         prep = apply_circuit(prep, circuit)
     measurement = qtn.TensorNetwork(
         [
-            qtn.Tensor(povms[j, 2 * b : 2 * b + 2], inds=(f"o{j}", output_ind(j, dagger=True), output_ind(j)), tags=site_tag(j))
+            qtn.Tensor(
+                povms[j, 2 * b : 2 * b + 2], inds=(f"o{j}", output_ind(j, dagger=True), output_ind(j)), tags=site_tag(j)
+            )
             for j, b in enumerate(basis_labels)
         ]
     )
@@ -88,14 +100,20 @@ def sample_shots(
     povms = pauli_eigenstates(n) if povms is None else np.asarray(povms, dtype=complex)
     _check_bases(povms)
     if settings is None:
-        settings = [(rng.integers(0, states.shape[1], n), rng.integers(0, povms.shape[1] // 2, n)) for _ in range(num_settings)]
+        settings = [
+            (rng.integers(0, states.shape[1], n), rng.integers(0, povms.shape[1] // 2, n)) for _ in range(num_settings)
+        ]
     bits = np.array(np.unravel_index(np.arange(2**n), (2,) * n)).T
     inputs, outcomes = [], []
-    for prep, basis in settings:
-        prep, basis = np.asarray(prep), np.asarray(basis)
-        counts = rng.multinomial(shots_per_setting, outcome_distribution(channel, circuit, prep, basis, states, povms).ravel())
+    for raw_prep, raw_basis in settings:
+        prep, basis = np.asarray(raw_prep), np.asarray(raw_basis)
+        counts = rng.multinomial(
+            shots_per_setting, outcome_distribution(channel, circuit, prep, basis, states, povms).ravel()
+        )
         for flat in np.flatnonzero(counts):
             inputs.append(np.repeat(prep[None], counts[flat], axis=0))
             outcomes.append(np.repeat((2 * basis + bits[flat])[None], counts[flat], axis=0))
     order = rng.permutation(len(settings) * shots_per_setting)
-    return NoiseDataset(np.concatenate(inputs)[order], np.concatenate(outcomes)[order], states, povms, circuit, ideal_channel=channel)
+    return NoiseDataset(
+        np.concatenate(inputs)[order], np.concatenate(outcomes)[order], states, povms, circuit, ideal_channel=channel
+    )

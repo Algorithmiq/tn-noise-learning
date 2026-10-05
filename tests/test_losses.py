@@ -10,8 +10,8 @@ from qiskit.quantum_info import Operator
 
 from tn_noise_learning.channels import PAULI_EIGENSTATES, two_qubit_depolarizing
 from tn_noise_learning.circuits import circuit_network
-from tn_noise_learning.lpdo import LPDO
 from tn_noise_learning.losses import negative_log_likelihood, probabilities, tp_penalty
+from tn_noise_learning.lpdo import LPDO
 from tn_noise_learning.topology import Topology
 
 
@@ -69,5 +69,7 @@ def test_negative_log_likelihood():
 def test_tp_penalty_zero_for_identity_and_positive_otherwise():
     topology = Topology.square(2, 2)
     assert tp_penalty(LPDO.identity(topology).network()) == pytest.approx(0.0, abs=1e-12)
-    assert tp_penalty(two_qubit_depolarizing(topology, 0.1, edges=[(0, 1), (2, 3)]).network()) == pytest.approx(0.0, abs=1e-12)
+    assert tp_penalty(two_qubit_depolarizing(topology, 0.1, edges=[(0, 1), (2, 3)]).network()) == pytest.approx(
+        0.0, abs=1e-12
+    )
     assert tp_penalty(LPDO.random(topology, 2, 2, seed=0).network()) > 1e-3

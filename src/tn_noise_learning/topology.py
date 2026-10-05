@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
 
 import quimb.tensor as qtn
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
 
 
 @dataclass(frozen=True)
@@ -50,10 +53,10 @@ class Topology:
     @classmethod
     def from_edges(cls, edges: Iterable[tuple[int, int]], num_sites: int | None = None) -> Topology:
         """Custom topology from an edge list; ``num_sites`` defaults to the largest site index plus one."""
-        edges = tuple(tuple(e) for e in edges)
+        pairs = tuple((int(i), int(j)) for i, j in edges)
         if num_sites is None:
-            num_sites = 1 + max((max(e) for e in edges), default=0)
-        return cls(num_sites, edges)  # type: ignore[arg-type]
+            num_sites = 1 + max((max(e) for e in pairs), default=0)
+        return cls(num_sites, pairs)
 
     def neighbors(self, site: int) -> tuple[int, ...]:
         """Sites bonded to ``site``, in ascending order."""

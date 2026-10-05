@@ -42,8 +42,10 @@ def test_sample_shots_reproducible_and_valid():
     assert data.ideal_channel is channel
     np.testing.assert_array_equal(data.inputs, again.inputs)
     np.testing.assert_array_equal(data.outcomes, again.outcomes)
-    assert data.inputs.min() >= 0 and data.inputs.max() < 6
-    assert data.outcomes.min() >= 0 and data.outcomes.max() < 6
+    assert data.inputs.min() >= 0
+    assert data.inputs.max() < 6
+    assert data.outcomes.min() >= 0
+    assert data.outcomes.max() < 6
 
 
 def test_sample_shots_frequencies_follow_distribution():

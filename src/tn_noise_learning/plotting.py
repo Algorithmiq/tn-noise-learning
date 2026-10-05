@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from matplotlib.figure import Figure
 
     from .history import History
@@ -17,9 +18,11 @@ STANDARD_PANELS = ("loss", "nll", "tp_penalty", "trace", "distance_to_ideal")
 def plot_history(history: History, path: str | Path | None = None) -> Figure:
     """One panel per metric: loss (train and test), NLL, TP penalty, trace, distance to ideal, then custom metrics."""
     try:
-        import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt  # noqa: PLC0415  (optional dependency)
     except ImportError as error:
-        raise ImportError("Plotting requires matplotlib; install the extra with `pip install tn-noise-learning[plot]`.") from error
+        raise ImportError(
+            "Plotting requires matplotlib; install the extra with `pip install tn-noise-learning[plot]`."
+        ) from error
 
     metrics = history.metrics
     custom = [name for name in metrics if name not in {*STANDARD_PANELS, "train_loss", "test_loss"}]

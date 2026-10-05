@@ -23,5 +23,5 @@ def test_from_edges_normalises_and_infers_sites():
 
 @pytest.mark.parametrize("edges", [[(0, 0)], [(0, 5)]])
 def test_invalid_edges_raise(edges):
-    with pytest.raises(ValueError, match="not allowed|outside"):
+    with pytest.raises(ValueError, match=r"not allowed|outside"):
         Topology(3, tuple(edges))

@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from typing import TYPE_CHECKING
 
 import numpy as np
 
 from .lpdo import LPDO
-from .topology import Topology
+
+if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from .topology import Topology
 
 PAULI = np.array(
     [[[1, 0], [0, 1]], [[0, 1], [1, 0]], [[0, -1j], [1j, 0]], [[1, 0], [0, -1]]],
@@ -25,7 +29,7 @@ PAULI_EIGENSTATES = np.array(
     ],
     dtype=complex,
 )
-"""Single-qubit states ``|0>, |1>, |+>, |−>, |+i>, |−i>``; effect ``2 * basis + bit`` is the projector onto that outcome."""
+"""States ``|0>, |1>, |+>, |−>, |+i>, |−i>``; effect ``2 * basis + bit`` is outcome ``bit`` of basis Z, X or Y."""
 
 
 def pauli_eigenstates(num_sites: int) -> np.ndarray:

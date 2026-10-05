@@ -73,4 +73,6 @@ def test_validation():
     with pytest.raises(ValueError, match="outside the range"):
         NoiseDataset(np.array([[7]]), np.array([[0]]), pauli_eigenstates(1), pauli_eigenstates(1))
     with pytest.raises(ValueError, match="Circuit acts on"):
-        NoiseDataset(np.array([[0]]), np.array([[0]]), pauli_eigenstates(1), pauli_eigenstates(1), circuit=QuantumCircuit(2))
+        NoiseDataset(
+            np.array([[0]]), np.array([[0]]), pauli_eigenstates(1), pauli_eigenstates(1), circuit=QuantumCircuit(2)
+        )

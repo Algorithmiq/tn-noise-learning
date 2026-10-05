@@ -12,17 +12,20 @@ Layout of ``dataset.zarr``::
 
 from __future__ import annotations
 
-from collections.abc import Iterator
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
-from pathlib import Path
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import numpy as np
 import zarr
 from qiskit import QuantumCircuit, qasm2
 
+from ._io import read_array
 from .lpdo import LPDO
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+    from pathlib import Path
 
 FORMAT_VERSION = 1
 ARRAY_NAMES = ("inputs", "outcomes", "states", "povms")
@@ -64,7 +67,12 @@ class NoiseDataset:
         n = self.num_qubits
         if self.inputs.shape != self.outcomes.shape or self.inputs.ndim != 2:
             raise ValueError("inputs and outcomes must both have shape (num_shots, num_qubits).")
-        if self.states.shape[0] != n or self.states.shape[-2:] != (2, 2) or self.povms.shape[0] != n or self.povms.shape[-2:] != (2, 2):
+        if (
+            self.states.shape[0] != n
+            or self.states.shape[-2:] != (2, 2)
+            or self.povms.shape[0] != n
+            or self.povms.shape[-2:] != (2, 2)
+        ):
             raise ValueError("states and povms must have shape (num_qubits, num_labels, 2, 2).")
         if self.inputs.min(initial=0) < 0 or self.inputs.max(initial=0) >= self.states.shape[1]:
             raise ValueError("inputs contain labels outside the range of states.")
@@ -106,7 +114,9 @@ class NoiseDataset:
         sites = np.arange(self.num_qubits)[:, None]
         return Batch(self.states[sites, self.inputs[indices].T], self.povms[sites, self.outcomes[indices].T])
 
-    def batches(self, batch_size: int, *, shuffle: bool = True, seed: int = 0, drop_last: bool = True) -> Iterator[Batch]:
+    def batches(
+        self, batch_size: int, *, shuffle: bool = True, seed: int = 0, drop_last: bool = True
+    ) -> Iterator[Batch]:
         """Iterate over batches; with ``drop_last`` every batch has exactly ``batch_size`` shots (one JIT trace)."""
         if batch_size > self.num_shots:
             raise ValueError(f"batch_size {batch_size} exceeds the {self.num_shots} shots in the dataset.")
@@ -118,7 +128,9 @@ class NoiseDataset:
     def save(self, path: str | Path) -> None:
         """Write the dataset to a zarr store at ``path`` (overwriting)."""
         group = zarr.open_group(str(path), mode="w")
-        group.attrs.update(format_version=FORMAT_VERSION, num_qubits=self.num_qubits, created=datetime.now(UTC).isoformat())
+        group.attrs.update(
+            format_version=FORMAT_VERSION, num_qubits=self.num_qubits, created=datetime.now(UTC).isoformat()
+        )
         if self.circuit is not None:
             group.attrs["circuit_qasm2"] = qasm2.dumps(self.circuit)
         for name in ARRAY_NAMES:
@@ -132,9 +144,13 @@ class NoiseDataset:
     def load(cls, path: str | Path) -> NoiseDataset:
         """Read a dataset written by [`save`][tn_noise_learning.dataset.NoiseDataset.save]."""
         group = zarr.open_group(str(path), mode="r")
-        arrays = {name: group[name][:] for name in ARRAY_NAMES}  # type: ignore[index]
+        arrays = {name: read_array(group, name) for name in ARRAY_NAMES}
         circuit = None
         if "circuit_qasm2" in group.attrs:
-            circuit = qasm2.loads(str(group.attrs["circuit_qasm2"]), custom_instructions=qasm2.LEGACY_CUSTOM_INSTRUCTIONS)
-        ideal = LPDO.from_group(group["ideal_channel"]) if "ideal_channel" in group else None  # type: ignore[arg-type]
+            circuit = qasm2.loads(
+                str(group.attrs["circuit_qasm2"]), custom_instructions=qasm2.LEGACY_CUSTOM_INSTRUCTIONS
+            )
+        ideal = None
+        if "ideal_channel" in group:
+            ideal = LPDO.from_group(zarr.open_group(str(path), mode="r", path="ideal_channel"))
         return cls(**arrays, circuit=circuit, ideal_channel=ideal)

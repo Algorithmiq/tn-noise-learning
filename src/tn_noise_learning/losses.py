@@ -7,30 +7,37 @@ Every loss term has the signature ``term(lpdo_tn, probs) -> scalar`` so that cus
 from __future__ import annotations
 
 from collections.abc import Callable
+from typing import TYPE_CHECKING
 
 import jax.numpy as jnp
-import numpy as np
 import quimb.tensor as qtn
+from jax import Array
 
 from .circuits import BATCH_IND, product_state_network
 from .lpdo import input_ind, output_ind, site_tag
+
+if TYPE_CHECKING:
+    import numpy as np
 
 LossTerm = Callable[[qtn.TensorNetwork, jnp.ndarray], jnp.ndarray]
 
 PROBABILITY_FLOOR = 1e-15
 
 
-def measurement_network(povms: np.ndarray) -> qtn.TensorNetwork:
+def measurement_network(povms: np.ndarray | Array) -> qtn.TensorNetwork:
     """Batched POVM effects ``povms[j, exp]`` (shape ``(num_sites, batch, 2, 2)``) as tensors ``(exp, bn_j, kn_j)``."""
     return qtn.TensorNetwork(
-        [qtn.Tensor(e, inds=(BATCH_IND, output_ind(j, dagger=True), output_ind(j)), tags=site_tag(j)) for j, e in enumerate(povms)]
+        [
+            qtn.Tensor(e, inds=(BATCH_IND, output_ind(j, dagger=True), output_ind(j)), tags=site_tag(j))
+            for j, e in enumerate(povms)
+        ]
     )
 
 
 def probabilities(
     lpdo_tn: qtn.TensorNetwork,
-    states: np.ndarray,
-    povms: np.ndarray,
+    states: np.ndarray | Array,
+    povms: np.ndarray | Array,
     circuit_tn: qtn.TensorNetwork | None = None,
     optimize: str = "auto-hq",
 ) -> jnp.ndarray:

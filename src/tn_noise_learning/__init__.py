@@ -22,8 +22,8 @@ from .trainer import Trainer, TrainingConfig, project_trace_preserving
 __version__ = "0.2.0"
 
 __all__ = [
-    "PAULI_EIGENSTATES",
     "LPDO",
+    "PAULI_EIGENSTATES",
     "Batch",
     "History",
     "LossTerm",

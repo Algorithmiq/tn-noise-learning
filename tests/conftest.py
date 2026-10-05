@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
 
 from tn_noise_learning.channels import depolarizing
-from tn_noise_learning.dataset import NoiseDataset
 from tn_noise_learning.simulate import sample_shots
 from tn_noise_learning.topology import Topology
+
+if TYPE_CHECKING:
+    from tn_noise_learning.dataset import NoiseDataset
 
 
 @pytest.fixture(scope="session")
