@@ -5,11 +5,11 @@ build-backend = "hatchling.build"
 
 [project]
 name = "tn_noise_learning"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
   { name = "Algorithmiq", email = "noise-learning@algorithmiq.fi" },
 ]
-description = "Tensor-network learning of quantum noise channels (LPDO + MPO + JAX) for QPT."
+description = "Tensor-network learning of quantum noise channels: LPDO models on 1D, 2D and custom topologies."
 readme = "README.md"
 requires-python = ">=3.12"
 license = { text = "Apache-2.0" }
@@ -25,7 +25,6 @@ classifiers = [
 ]
 dependencies = [
   "numpy>=2.0,<2.4",
-  "scipy>=1.13",
   "quimb>=1.11",
   "autoray>=0.6",
   "cotengra>=0.8.2",
@@ -33,22 +32,19 @@ dependencies = [
   "jaxlib>=0.9,<0.10",
   "optax>=0.2.8",
   "qiskit>=2.2,<3",
-  "joblib>=1.3",
-  "tqdm>=4.65",
   "zarr>=3",
 ]
 
 [project.optional-dependencies]
-plot = ["matplotlib>=3.8", "seaborn>=0.13"]
+plot = ["matplotlib>=3.8"]
 
 [project.urls]
-Repository = "https://github.com/Algorithmiq/tn-noise-learning"
+Repository = "https://github.com/Algorithmiq/TensorNetworksNoiseLearning"
 
 [dependency-groups]
 test = [
   "pytest>=8.2",
-  "pytest-cases>=3.6",
-  "hypothesis[numpy]>=6.100",
+  "pytest-cov>=5",
 ]
 dev = [
   "ruff>=0.6",
@@ -62,7 +58,6 @@ docs = [
   "mkdocs-gen-files>=0.5",
   "mkdocs-literate-nav>=0.6",
   "mkdocs-section-index>=0.3",
-  "mkdocs-jupyter>=0.24",
 ]
 
 

@@ -2,19 +2,12 @@
 
 from __future__ import annotations
 
-import numpy as np
 import pytest
 
 from tn_noise_learning.channels import depolarizing
 from tn_noise_learning.dataset import NoiseDataset
 from tn_noise_learning.simulate import sample_shots
 from tn_noise_learning.topology import Topology
-
-
-@pytest.fixture
-def rng() -> np.random.Generator:
-    """Deterministic numpy Generator for reproducible smoke tests."""
-    return np.random.default_rng(seed=42)
 
 
 @pytest.fixture(scope="session")

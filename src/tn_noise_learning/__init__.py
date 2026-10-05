@@ -1,60 +1,50 @@
 """Tensor-network learning of quantum noise channels.
 
-Public API surface. Each subpackage exposes its own complete API; the names
-re-exported here are the most common entry points for the end-to-end pipeline:
-
-* `select_noise_channel` — build a noise channel by short string identifier.
-* `build_lpdo`, `LPDOSuperOperator1D` — construct LPDO super-operators.
-* `qc_to_mpo` — Qiskit circuit to unitary MPO.
-* `build_qpt_mpo`, `simulate_experiments`, `generate_data` — QPT simulation.
-* `train`, `optimize_tn` — JAX-based optimisation of LPDO parameters.
-* `save_results`, `load_results` — JSON I/O for trained LPDOs.
+Pipeline: [`Topology`][tn_noise_learning.Topology] → [`LPDO`][tn_noise_learning.LPDO] →
+[`NoiseDataset`][tn_noise_learning.NoiseDataset] → [`Trainer`][tn_noise_learning.Trainer] →
+[`History`][tn_noise_learning.History].
 """
 
 from __future__ import annotations
 
-import jax
+from . import _jax  # noqa: F401  (must run before any JAX array is created)
+from .channels import PAULI_EIGENSTATES, depolarizing, pauli_channel, pauli_eigenstates, two_qubit_depolarizing
+from .circuits import apply_circuit, circuit_network, product_state_network
+from .dataset import Batch, NoiseDataset
+from .history import History
+from .losses import LossTerm, negative_log_likelihood, probabilities, tp_penalty
+from .lpdo import LPDO, full_network
+from .plotting import plot_history
+from .simulate import outcome_distribution, sample_shots
+from .topology import Topology
+from .trainer import Trainer, TrainingConfig, project_trace_preserving
 
-jax.config.update("jax_enable_x64", True)
-
-from .io import load_results, save_results
-from .noise_models import select_noise_channel
-from .qpt import (
-    build_qpt_mpo,
-    generate_data,
-    pauli_eigenstates,
-    sic_tetrahedron_states,
-    simulate_experiments,
-)
-from .tn_core import (
-    LPDOSuperOperator1D,
-    build_lpdo,
-    compose_lpdos,
-    lpdo_fidelity,
-    lpdo_to_mpo,
-    qc_to_mpo,
-)
-from .training import kl_divergence, optimize_tn, train
-
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 __all__ = [
-    "LPDOSuperOperator1D",
+    "PAULI_EIGENSTATES",
+    "LPDO",
+    "Batch",
+    "History",
+    "LossTerm",
+    "NoiseDataset",
+    "Topology",
+    "Trainer",
+    "TrainingConfig",
     "__version__",
-    "build_lpdo",
-    "build_qpt_mpo",
-    "compose_lpdos",
-    "generate_data",
-    "kl_divergence",
-    "load_results",
-    "lpdo_fidelity",
-    "lpdo_to_mpo",
-    "optimize_tn",
+    "apply_circuit",
+    "circuit_network",
+    "depolarizing",
+    "full_network",
+    "negative_log_likelihood",
+    "outcome_distribution",
+    "pauli_channel",
     "pauli_eigenstates",
-    "qc_to_mpo",
-    "save_results",
-    "select_noise_channel",
-    "sic_tetrahedron_states",
-    "simulate_experiments",
-    "train",
+    "plot_history",
+    "probabilities",
+    "product_state_network",
+    "project_trace_preserving",
+    "sample_shots",
+    "tp_penalty",
+    "two_qubit_depolarizing",
 ]
