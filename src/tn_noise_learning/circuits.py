@@ -12,6 +12,7 @@ import logging
 import numpy as np
 import quimb.tensor as qtn
 from qiskit import QuantumCircuit
+from qiskit.quantum_info import Operator
 
 from .lpdo import input_ind, site_tag
 
@@ -58,7 +59,7 @@ def circuit_network(circuit: QuantumCircuit) -> qtn.TensorNetwork:
         if len(sites) > 2:
             raise ValueError(f"Gate {operation.name} acts on {len(sites)} qubits; only one- and two-qubit gates are supported.")
         try:
-            gate = np.asarray(operation.to_matrix(), dtype=complex)
+            gate = np.asarray(Operator(operation).data, dtype=complex)
         except Exception as error:
             raise ValueError(f"Operation {operation.name} is not a unitary gate.") from error
         pieces = [(sites[0], gate[None])] if len(sites) == 1 else list(zip(sites, _schmidt_pair(gate), strict=True))

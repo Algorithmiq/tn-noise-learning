@@ -88,6 +88,7 @@ class LPDO:
     tensors: list[np.ndarray]
 
     def __post_init__(self) -> None:
+        """Validate tensor count, axis counts, physical dimensions and bond sizes."""
         if len(self.tensors) != self.topology.num_sites:
             raise ValueError(f"Expected {self.topology.num_sites} tensors, got {len(self.tensors)}.")
         self.tensors = [np.asarray(t) for t in self.tensors]

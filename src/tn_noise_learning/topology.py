@@ -24,6 +24,7 @@ class Topology:
     edges: tuple[tuple[int, int], ...]
 
     def __post_init__(self) -> None:
+        """Validate sites and normalise the edge list."""
         if self.num_sites < 1:
             raise ValueError(f"num_sites must be positive, got {self.num_sites}.")
         normalised = set()
