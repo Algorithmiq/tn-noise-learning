@@ -1,40 +1,18 @@
 # tn-noise-learning
 
-Tensor-network learning of quantum noise channels (LPDO + MPO + JAX) for
-quantum process tomography.
+Learn the noise channel of a quantum circuit layer from measurement shots, with tensor networks.
 
-`tn_noise_learning` represents quantum channels as **LPDO** (Locally Purified
-Density Operator) or **MPO** (Matrix Product Operator) tensor networks in
-**PTM** (Pauli Transfer Matrix) form, simulates QPT experiments by tensor
-contraction, and reconstructs the noise from sampled outcomes via JAX
-autodiff with a KL-divergence + trace-preservation loss.
-
-The library is the engineered/reusable extract of the research codebase
-**SABRINA** (*Sensible Approach to Beat Ridiculously Impractical
-Noise-characterization Algorithms*).
-
-## Quick links
-
-* [Getting started](getting-started.md) — install, run a 4-qubit toy example.
-* Concepts:
-  * [LPDO super-operators](concepts/lpdo.md)
-  * [Noise channels](concepts/noise-channels.md)
-  * [QPT pipeline](concepts/qpt-pipeline.md)
-  * [Training](concepts/training.md)
-* [Code reference](reference/) — auto-generated from docstrings.
-
-## Pipeline at a glance
+A quantum channel on `n` qubits is stored as a **locally purified density operator (LPDO)**: one Kraus tensor
+`V_j` per qubit with a Kraus index of size `K`, joined to its neighbours by virtual bonds of size `χ` along a chosen
+`Topology`. The channel `Λ(ρ) = Σ V ρ V†` is completely positive by construction. Its parameters are fitted by
+maximum likelihood to shots of product-state preparations and product measurements, with a soft penalty that
+keeps the channel trace preserving.
 
 ```
-Input states (OC / SIC-POVM)  ─┐
-Unitary circuit (MPO)          ├─▶ build_qpt_mpo()  ─▶  simulate_experiments()
-Noise channel (MPO/LPDO)       ┘       │                        │
-POVM measurements ─────────────────────┘              JSON experiment data
-                                                               │
-                                                       training.dataset
-                                                               │
-                                                       training.optimize_tn
-                                                      (JAX + optax, KL loss)
-                                                               │
-                                                    Optimised LPDO parameters
+Topology  ─►  LPDO  ─►  NoiseDataset (zarr)  ─►  Trainer  ─►  History.plot()
 ```
+
+- [Quickstart](quickstart.md): the example script, step by step.
+- [Concepts](concepts.md): the LPDO, the probability network, the loss, how shots are simulated.
+- [Developer guide](developer.md): layout, conventions, how to extend.
+- [Code reference](reference/): generated from the docstrings.

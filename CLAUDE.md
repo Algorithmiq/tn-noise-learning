@@ -1,100 +1,61 @@
 # CLAUDE.md
 
-Guidance for Claude Code (and other LLM tooling) working in this repository.
+Guidance for Claude Code and other LLM tooling working in this repository.
 
 ## Project
 
-`tn_noise_learning` — tensor-network learning of quantum noise channels.
-
-Quantum Process Tomography (QPT) implemented with tensor networks: noise
-channels are represented as MPOs or LPDOs in Pauli Transfer Matrix (PTM)
-form, then optimised with JAX autodiff. Ported from the research codebase
-**SABRINA**.
+`tn_noise_learning`: learn the noise channel of a quantum circuit layer from measurement shots. The channel is an
+LPDO (one Kraus tensor per qubit, bonds along a `Topology`), trained by maximum likelihood with JAX/optax plus a
+trace-preservation penalty. Pipeline: `Topology -> LPDO -> NoiseDataset (zarr) -> Trainer -> History`.
 
 ## Environment
 
-Python 3.12, dependencies managed by `uv`.
+Python 3.12/3.13, dependencies managed by `uv`.
 
 ```bash
-uv sync                  # install runtime + test deps
-uv run pytest -q
-uv run ruff check .
-uv run mkdocs build
+uv sync --all-extras --all-groups
+uv run pytest -q                 # ~25 s; the 2x2-lattice recovery test is marked `slow`
+uv run ruff check . && uv run ruff format --check . && uv run mypy
+uv run mkdocs build --strict
+uv run python examples/minimal_example.py
 ```
 
-The pinned versions are taken from sabrina's "known working" set:
-numpy 2.3, qiskit 2.2, quimb 1.11, jax 0.9, optax 0.2.8, cotengra 0.7.
+## Layout
 
-## Architecture
+Flat package, one concern per module (see the table in `README.md`): `topology`, `lpdo`, `circuits`, `channels`,
+`dataset`, `simulate`, `losses`, `trainer`, `history`, `plotting`. `_jax.py` enables 64-bit JAX and is imported
+first by `__init__.py`; `_io.py` holds typed zarr reads. `tests/test_<module>.py` mirrors `src`, plus
+`test_end_to_end.py` (recover a known channel from simulated shots) and `test_package.py`.
 
-```
-src/tn_noise_learning/
-├── tn_core/        # LPDOSuperOperator1D + LPDO/MPO construction helpers
-├── noise_models/   # select_noise_channel dispatcher + LPDO/MPO channel constructors
-├── qpt/            # build_qpt_mpo, simulate_experiments, SPAM variant, generate_data CLI
-├── training/       # JAX loss + optimize_tn + dataset pipeline + train() driver
-├── io/             # save_results / load_results (complex→string serialisation)
-└── utils/          # PTM conversions and channel metrics
-```
+## Conventions that matter for correctness
 
-End-to-end flow:
+- **Sites** are integers `0..n-1` = dataset qubit order = Qiskit qubit index. Edges are sorted `(i, j)`, `i < j`.
+- **Kraus tensor axes**: `(*bonds to neighbours in ascending order, kraus, out, in)`.
+- **Index names** (`lpdo.py`): bond `v{i}_{j}` / conjugate `w{i}_{j}`, kraus `kr{j}`, output `kn{j}` / `bn{j}`,
+  input `k{j}` / `b{j}`; raw (pre-circuit) state legs `p{j}` / `q{j}`; batch hyper-index `exp`.
+  The conjugate half is never stored; `full_network` builds it from the Kraus half.
+- **Ket/bra**: `k`/`kn` are ket (row) indices, `b`/`bn` are bra (column) indices. A state tensor is `(exp, k, b)`
+  with data ρ; an effect tensor is `(exp, bn, kn)` with data E, so the contraction is `Tr[E Λ(ρ)]`.
+- **Effect labels**: `2 * basis + bit`; consecutive effect pairs sum to the identity.
+- **Gates**: Qiskit matrices are little-endian; `_schmidt_pair` handles the axis order. Gates on non-edge pairs are
+  allowed because circuit bonds (`s*`) and model bonds are different index sets.
+- Joining the state and effect networks needs `check_collisions=False` (both carry the inner index `exp`).
+- Gradients of complex parameters are conjugated before `optimizer.update`. 64-bit JAX is mandatory.
+- `tp_penalty` is **squared**: an unsquared norm has a kink at zero and swamps the data term under Adam.
+  The likelihood alone rewards inflating the trace; at weight `w` the trained trace exceeds `2**n` by `~1/(2w)`.
+- `LPDO.distance` is the squared normalised Frobenius distance `‖A − B‖_F² / 4**n`.
+- Early stopping monitors `test_loss`, never the distance to the ideal channel (that would leak the ground truth).
 
-```
-input states ─┐
-unitary MPO   ├─▶ build_qpt_mpo()  ─▶  simulate_experiments()  ─▶  JSON data
-noise MPO/LPDO┘                                                       │
-                                                          create_training_dataset()
-                                                                      │
-                                                              optimize_tn()
-                                                                      │
-                                                          trained LPDO + metrics
-                                                                      │
-                                                              save_results()
-```
+## Testing policy
 
-## Key concepts
+- Tiny fixtures: `Topology.chain(2)`, `Topology.square(2, 2)`; dense references are built with explicit Kraus sums
+  and `qiskit.quantum_info.Operator`, never with another tensor-network path.
+- `pytest.raises(..., match=...)` always. Mark tests over ~10 s as `slow`.
+- Do not add notebooks, data files or figures to the repository.
 
-* **PTM** (Pauli Transfer Matrix) — density matrices encoded as `4^n`-element
-  vectors; channels become super-operators on 4-D physical legs.
-* **MPO** — Matrix Product Operator; bond dimension χ controls expressivity.
-* **LPDO** — Locally Purified Density Operator; Kraus dimension K controls
-  Kraus rank. Complete positivity by construction.
-* **Trace preservation (TP)** — enforced as a soft penalty
-  `λ · ‖Tr[E] − 𝟙‖ / 2^{n/2}` and optionally warm-started by L-BFGS-B via
-  `optimize_trace_preservation`.
-* **cotengra cache** (`ctg_cache/`) — persistent contraction-path cache used
-  by training; gitignored, safe to delete.
+## Do not
 
-## Working in this repo
-
-* `src/` is the library; `tests/` mirrors its tree.
-* `examples/` is research scripts/notebooks ported verbatim from sabrina —
-  **not** installed; use it only for reproducibility material.
-* No `data/` or `opt_results/` directories are committed — they are
-  regenerated locally by running `examples/notebooks/generate_qpt_data.ipynb`
-  or the data-generation CLI.
-
-### Style
-
-* Google-style docstrings, full type hints encouraged but not enforced yet
-  (`mypy --strict` is a follow-up milestone).
-* Ruff configured at 120 cols, `from __future__ import annotations` required.
-* Quantum identifiers like `N`, `K`, `U` are permitted as variable names
-  (uppercase) — see `[tool.ruff.lint] ignore = ["N803", "N806"]`.
-
-### Notes carried over from sabrina
-
-The original codebase targeted older package versions. The migration was a
-verbatim move of the logic with minimal cleanup; known patterns:
-
-* `qiskit 2.x` API changes — most call sites already use the new paths but
-  watch for `_data` / `_index` private accesses in `mpo_utils.qc_to_mpo`.
-* `numpy 2.x` — broadcasts and type aliases.
-* `jax 0.9.x` — `jax.config.update("jax_enable_x64", True)` is called in
-  `training/losses.py` and `training/pipeline.py`.
-
-### Stale code flagged for follow-up
-
-* `examples/floquet/noise_learning.py` is a stale, divergent copy of the
-  training script kept only for reproducibility of the Floquet analysis.
-  Prefer `tn_noise_learning.training.train` for new work.
+- `print` in library code (ruff T20); use `logging`.
+- Global RNG seeding; pass `seed` and use `np.random.default_rng`.
+- Plotting outside `plotting.py`; matplotlib is an optional extra.
+- Re-introduce 1D-only code paths; everything must work on an arbitrary `Topology`.
