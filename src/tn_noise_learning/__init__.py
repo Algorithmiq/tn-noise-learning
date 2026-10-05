@@ -13,6 +13,10 @@ re-exported here are the most common entry points for the end-to-end pipeline:
 
 from __future__ import annotations
 
+import jax
+
+jax.config.update("jax_enable_x64", True)
+
 from .io import load_results, save_results
 from .noise_models import select_noise_channel
 from .qpt import (
