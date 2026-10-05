@@ -59,7 +59,7 @@ def test_loss_matches_legacy_loss_fn(chain_arrays):
     probs = probabilities(lpdo_tn, states, povms, circuit_network(qc))
     np.testing.assert_allclose(probs, old_probs, rtol=1e-10)
     assert negative_log_likelihood(lpdo_tn, probs) == pytest.approx(float(old_nll), rel=1e-10)
-    assert tp_penalty(lpdo_tn) == pytest.approx(float(old_tp), rel=1e-8)
+    assert np.sqrt(tp_penalty(lpdo_tn)) == pytest.approx(float(old_tp), rel=1e-8)
 
 
 def test_two_qubit_depolarizing_matches_legacy_even_layer():

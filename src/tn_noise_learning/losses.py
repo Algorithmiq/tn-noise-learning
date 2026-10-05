@@ -49,10 +49,16 @@ def negative_log_likelihood(lpdo_tn: qtn.TensorNetwork, probs: jnp.ndarray) -> j
 
 
 def tp_penalty(lpdo_tn: qtn.TensorNetwork, probs: jnp.ndarray | None = None) -> jnp.ndarray:  # noqa: ARG001
-    """Relative distance of the output-traced channel from the identity, ``‖Tr_out Λ − 𝟙‖_F / 2**(n/2)``."""
+    """Squared relative distance of the output-traced channel from the identity, ``‖Tr_out Λ − 𝟙‖_F² / 2**n``.
+
+    Squaring keeps the gradient proportional to the violation, so large weights act as a smooth quadratic
+    constraint. The likelihood alone rewards inflating the channel's trace, which this term counteracts; at
+    weight ``w`` the equilibrium trace exceeds ``2**n`` by a factor ``1 + 1/(2w)``.
+    """
     num_sites = len(lpdo_tn.tensors) // 2
     traced = lpdo_tn.reindex({output_ind(j): output_ind(j, dagger=True) for j in range(num_sites)})
     identity = qtn.TensorNetwork(
         [qtn.Tensor(jnp.eye(2), inds=(input_ind(j), input_ind(j, dagger=True))) for j in range(num_sites)]
     )
-    return jnp.real(qtn.tensor_network_distance(traced, identity, backend="jax")) / 2 ** (num_sites / 2)
+    distance = jnp.real(qtn.tensor_network_distance(traced, identity, backend="jax"))
+    return distance**2 / 2**num_sites
