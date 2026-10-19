@@ -27,6 +27,9 @@ jobs:
 
       - name: Set up the build environment
         uses: ./.github/actions/setup
+        with:
+          # coverage and Sonar come from one interpreter; the test matrix covers the others
+          python-version: "3.14"
 
       - name: Install package
         run: just build
