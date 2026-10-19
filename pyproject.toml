@@ -140,13 +140,12 @@ ignore = [
   "FBT001", "FBT002",   # boolean flags such as shuffle=True
   "RUF001", "RUF002", "RUF003",  # unicode math (Λ, ‖·‖, →) in docstrings and comments
 ]
+# do not autofix these: the fix deletes code
+unfixable = ["ERA", "F401", "F841", "T20"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "ANN", "S101", "INP001", "PLR0913", "PT011", "SLF001", "E731", "ARG"]
 "examples/**" = ["T201", "INP001", "D"]
-
-# do not autofix these: the fix deletes code
-unfixable = ["ERA", "F401", "F841", "T20"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
