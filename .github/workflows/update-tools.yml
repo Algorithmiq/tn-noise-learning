@@ -1,0 +1,72 @@
+name: Update ruff and ty
+
+on:
+  schedule:
+    - cron: "0 0 1 * *"
+  workflow_dispatch:
+
+jobs:
+  update:
+    name: Update ${{ matrix.tool }}
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+      pull-requests: write
+    strategy:
+      fail-fast: false
+      matrix:
+        tool: [ruff, ty]
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up the build environment
+        uses: ./.github/actions/setup
+
+      - name: Find the latest release
+        id: versions
+        env:
+          TOOL: ${{ matrix.tool }}
+        run: |
+          latest="$(curl -fsSL "https://pypi.org/pypi/${TOOL}/json" | jq -r .info.version)"
+          current="$(sed -nE "s/.*\"${TOOL}==([0-9.]+)\".*/\1/p" pyproject.toml)"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "current=$current" >> "$GITHUB_OUTPUT"
+
+      - name: Bump the pin and the hook
+        if: steps.versions.outputs.latest != steps.versions.outputs.current
+        run: just bump-tool "${{ matrix.tool }}" "${{ steps.versions.outputs.latest }}"
+
+      - name: Install package
+        if: steps.versions.outputs.latest != steps.versions.outputs.current
+        run: just build
+
+      - name: Apply the new formatting
+        if: matrix.tool == 'ruff' && steps.versions.outputs.latest != steps.versions.outputs.current
+        run: just fmt
+
+      - name: Run the hooks
+        id: check
+        if: steps.versions.outputs.latest != steps.versions.outputs.current
+        continue-on-error: true
+        run: just lint
+
+      - name: Create pull request
+        if: steps.versions.outputs.latest != steps.versions.outputs.current
+        uses: peter-evans/create-pull-request@v8.1.1
+        with:
+          token: ${{ secrets.APPROVE_AUTO_MERGE_PAT }}
+          draft: ${{ steps.check.outcome == 'failure' }}
+          commit-message: "chore(deps-dev): ⬆️ update ${{ matrix.tool }} from ${{ steps.versions.outputs.current }} to ${{ steps.versions.outputs.latest }}"
+          title: "chore(deps-dev): ⬆️ update ${{ matrix.tool }} from ${{ steps.versions.outputs.current }} to ${{ steps.versions.outputs.latest }}"
+          body: |
+            Moves the `${{ matrix.tool }}` pin in `pyproject.toml` and its hook in `prek.toml` together, and refreshes `uv.lock`.
+            ${{ steps.check.outcome == 'failure' && 'The hooks fail with the new version; the PR is a draft until they are fixed.' || 'All hooks pass.' }}
+          branch: chore-deps-update-${{ matrix.tool }}-${{ steps.versions.outputs.latest }}
+          delete-branch: true
+          labels: |
+            dependencies
+            ${{ matrix.tool }}-update
+            automation
