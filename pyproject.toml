@@ -12,7 +12,8 @@ authors = [
 description = "Tensor-network learning of quantum noise channels: LPDO models on 1D, 2D and custom topologies."
 readme = "README.md"
 requires-python = ">=3.12"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE", "NOTICE"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Science/Research",
