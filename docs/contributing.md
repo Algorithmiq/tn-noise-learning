@@ -26,7 +26,8 @@ Pick one:
 | `just doctest` | run the code blocks of the README and the docs |
 | `just example` | run `examples/minimal_example.py` |
 
-CI runs the same recipes, so a failing check can be reproduced locally with the recipe it ran.
+CI runs the same recipes, so a failing check can be reproduced locally with the recipe it ran. `just lint` fails on
+`main` by design (`no-commit-to-branch`); work on a branch.
 
 ## Pull requests
 
