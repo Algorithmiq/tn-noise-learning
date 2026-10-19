@@ -60,6 +60,12 @@ hooks = [
 ]
 
 [[repos]]
+repo = "local"
+hooks = [
+    { id = "pin-actions-exactly", name = "pin actions to exact tags (vX.Y.Z)", language = "pygrep", entry = "uses:\\s*[^\\s@]+@v[0-9]+(\\.[0-9]+)?\\s*$", files = "^\\.github/(workflows|actions)/.*\\.ya?ml$" },
+]
+
+[[repos]]
 repo = "https://github.com/python-jsonschema/check-jsonschema"
 rev = "0.38.2"
 hooks = [
