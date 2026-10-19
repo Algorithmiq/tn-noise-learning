@@ -7,7 +7,7 @@ build-backend = "hatchling.build"
 name = "tn-noise-learning"
 dynamic = ["version"]
 authors = [
-  { name = "Algorithmiq Development Team", email = "noise-learning@algorithmiq.fi" },
+  { name = "Algorithmiq Development Team", email = "info@algorithmiq.fi" },
 ]
 description = "Tensor-network learning of quantum noise channels: LPDO models on 1D, 2D and custom topologies."
 readme = "README.md"
