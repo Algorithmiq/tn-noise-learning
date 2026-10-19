@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@v7
         with:
           # the PR's history, so prek can run on a commit range
           fetch-depth: 0
