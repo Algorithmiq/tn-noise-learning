@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "tn-noise-learning"
+abstract: "Learn the noise channel of a quantum circuit layer from measurement shots, with tensor networks."
+authors:
+  - family-names: "Grieco"
+    given-names: "Francesco"
+  - family-names: "Mangini"
+    given-names: "Stefano"
+license: Apache-2.0
+repository-code: "https://github.com/Algorithmiq/tn-noise-learning"
+url: "https://algorithmiq.github.io/tn-noise-learning/"
