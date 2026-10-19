@@ -99,12 +99,19 @@ exclude = [
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = ["--import-mode=importlib", "-ra", "--strict-markers", "--strict-config"]
+addopts = ["--import-mode=importlib", "-ra", "--showlocals", "--strict-markers", "--strict-config"]
 testpaths = ["tests"]
+xfail_strict = true
 markers = ["slow: mark test as slow (>= 10 s runtime)"]
+required_plugins = ["pytest-cov", "pytest-markdown-docs"]
 filterwarnings = [
+  "error",
   "ignore:Couldn't import `kahypar`:UserWarning",
   "ignore::DeprecationWarning:numpy.ctypeslib",
+  # cotengra's auto-hq path search forks a process pool inside multithreaded JAX (deadlock risk on Linux, Python < 3.14); to be tracked in an issue
+  "ignore:os.fork\\(\\) was called:RuntimeWarning",
+  # quimb's L-BFGS-B wrapper assigns ndarray.shape, deprecated in NumPy 2.5
+  "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning:quimb",
 ]
 
 
