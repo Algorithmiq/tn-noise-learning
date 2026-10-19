@@ -40,7 +40,7 @@ dependencies = [
 plot = ["matplotlib>=3.8"]
 
 [project.urls]
-Repository = "https://github.com/Algorithmiq/TensorNetworksNoiseLearning"
+Repository = "https://github.com/Algorithmiq/tn-noise-learning"
 
 [dependency-groups]
 test = [
