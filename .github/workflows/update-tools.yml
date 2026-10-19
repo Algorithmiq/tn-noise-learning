@@ -41,7 +41,7 @@ jobs:
 
       - name: Install package
         if: steps.versions.outputs.latest != steps.versions.outputs.current
-        run: just build
+        run: just build --all-groups
 
       - name: Apply the new formatting
         if: matrix.tool == 'ruff' && steps.versions.outputs.latest != steps.versions.outputs.current
@@ -51,6 +51,9 @@ jobs:
         id: check
         if: steps.versions.outputs.latest != steps.versions.outputs.current
         continue-on-error: true
+        env:
+          # this workflow runs on a checkout of main, where the always-run no-commit-to-branch hook fails by design
+          SKIP: no-commit-to-branch
         run: just lint
 
       - name: Create pull request
