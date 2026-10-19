@@ -8,6 +8,7 @@ Pipeline: [`Topology`][tn_noise_learning.Topology] → [`LPDO`][tn_noise_learnin
 from __future__ import annotations
 
 from . import _jax  # noqa: F401  (must run before any JAX array is created)
+from ._version import __version__
 from .channels import PAULI_EIGENSTATES, depolarizing, pauli_channel, pauli_eigenstates, two_qubit_depolarizing
 from .circuits import apply_circuit, circuit_network, product_state_network
 from .dataset import Batch, NoiseDataset
@@ -18,8 +19,6 @@ from .plotting import plot_history
 from .simulate import outcome_distribution, sample_shots
 from .topology import Topology
 from .trainer import Trainer, TrainingConfig, project_trace_preserving
-
-__version__ = "0.2.0"
 
 __all__ = [
     "LPDO",
