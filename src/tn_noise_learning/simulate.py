@@ -1,3 +1,17 @@
+# Copyright 2026 Algorithmiq
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Synthetic datasets from a known channel: exact outcome distributions sampled one setting at a time.
 
 A setting is a pair ``(state_labels, basis_labels)`` with one entry per qubit. One exact contraction gives the joint
@@ -36,6 +50,7 @@ def outcome_distribution(
     circuit: QuantumCircuit | None,
     state_labels: Labels,
     basis_labels: Labels,
+    *,
     states: np.ndarray,
     povms: np.ndarray,
     optimize: str = "auto-hq",
@@ -108,7 +123,8 @@ def sample_shots(
     for raw_prep, raw_basis in settings:
         prep, basis = np.asarray(raw_prep), np.asarray(raw_basis)
         counts = rng.multinomial(
-            shots_per_setting, outcome_distribution(channel, circuit, prep, basis, states, povms).ravel()
+            shots_per_setting,
+            outcome_distribution(channel, circuit, prep, basis, states=states, povms=povms).ravel(),
         )
         for flat in np.flatnonzero(counts):
             inputs.append(np.repeat(prep[None], counts[flat], axis=0))
