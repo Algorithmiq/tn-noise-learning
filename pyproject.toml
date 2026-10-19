@@ -153,6 +153,7 @@ unfixable = ["ERA", "F401", "F841", "T20"]
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "ANN", "S101", "INP001", "PLR0913", "PT011", "SLF001", "E731", "ARG"]
 "examples/**" = ["T201", "INP001", "D"]
+"tools/**" = ["INP001", "T201"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -165,4 +166,4 @@ required-imports = ["from __future__ import annotations"]
 python-version = "3.12"
 
 [tool.ty.src]
-include = ["src", "tests/conftest.py", "examples", "docs/gen_ref_pages.py"]
+include = ["src", "tests/conftest.py", "examples", "docs/gen_ref_pages.py", "tools"]

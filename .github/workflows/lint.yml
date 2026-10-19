@@ -1,8 +1,6 @@
 name: Lint
 
 on:
-  push:
-    branches: [main]
   pull_request:
 
 concurrency:
@@ -11,14 +9,26 @@ concurrency:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - name: Check out repository
+        uses: actions/checkout@v7.0.1
         with:
-          enable-cache: true
-      - run: uv python install 3.12
-      - run: uv sync --all-extras --all-groups
-      - run: uv run ruff check .
-      - run: uv run ruff format --check .
-      - run: uv run ty check
+          # the PR's history, so prek can run on a commit range
+          fetch-depth: 0
+
+      - name: Set up the build environment
+        uses: ./.github/actions/setup
+
+      # ty resolves imports against the project environment
+      - name: Install package
+        run: just build
+
+      - name: Run prek
+        uses: j178/prek-action@v3.0.2
+        env:
+          RUFF_OUTPUT_FORMAT: github
+          TY_OUTPUT_FORMAT: github
+        with:
+          extra-args: --from-ref ${{ github.event.pull_request.base.sha }} --to-ref ${{ github.event.pull_request.head.sha }}

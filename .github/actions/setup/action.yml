@@ -1,0 +1,22 @@
+name: Set up a tn-noise-learning CI environment
+description: >-
+  Install just and uv. Installs tools, not commands: anything a developer also
+  runs belongs in the justfile.
+
+inputs:
+  python-version:
+    description: Python version handed to setup-uv.
+    required: false
+    default: "3.12"
+
+runs:
+  using: composite
+  steps:
+    - name: Install just
+      uses: extractions/setup-just@v4.0.0
+
+    - name: Install uv
+      uses: astral-sh/setup-uv@v10.3.0
+      with:
+        enable-cache: true
+        python-version: ${{ inputs.python-version }}
