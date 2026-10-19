@@ -21,9 +21,9 @@ jobs:
       - name: Set up the build environment
         uses: ./.github/actions/setup
 
-      # ty resolves imports against the project environment
+      # ty resolves imports against the project environment, including the docs group (docs/gen_ref_pages.py)
       - name: Install package
-        run: just build
+        run: just build --all-groups
 
       - name: Run prek
         uses: j178/prek-action@v3.0.2
