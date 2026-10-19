@@ -91,9 +91,9 @@ packages = ["src/tn_noise_learning"]
 
 [tool.hatch.build.targets.sdist]
 exclude = [
-  ".devcontainer", ".envrc", ".github", ".lychee.toml", ".vscode", "AGENTS.md", "CLAUDE.md", "codecov.yml",
-  "cspell.json", "flake.lock", "flake.nix", "justfile", "nix", "plans", "prek.toml", "sonar-project.properties",
-  "tools",
+  ".devcontainer", ".envrc", ".github", ".lychee.toml", ".superpowers", ".vscode", "AGENTS.md", "CLAUDE.md",
+  "codecov.yml", "cspell.json", "flake.lock", "flake.nix", "justfile", "nix", "plans", "prek.toml",
+  "sonar-project.properties", "tools",
 ]
 
 

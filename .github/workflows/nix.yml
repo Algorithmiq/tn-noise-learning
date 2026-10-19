@@ -1,0 +1,48 @@
+name: Nix dev shell
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - .github/workflows/nix.yml
+      - flake.lock
+      - flake.nix
+      - nix/**
+      - pyproject.toml
+      - uv.lock
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  devshell:
+    name: Dev shell on ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-26.04, ubuntu-26.04-arm, macos-15]
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31.11.2
+
+      - name: Check flake
+        run: nix flake check
+
+      - name: Check dev shell tools
+        run: nix develop --command bash -euo pipefail -c 'uv --version; just --version; lychee --version'
+
+      - name: Install package in the dev shell
+        run: nix develop --command just build
+
+      - name: Run fast tests in the dev shell
+        run: nix develop --command just test -m "not slow"
