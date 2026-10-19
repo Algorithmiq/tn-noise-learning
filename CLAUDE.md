@@ -13,11 +13,11 @@ trace-preservation penalty. Pipeline: `Topology -> LPDO -> NoiseDataset (zarr) -
 Python 3.12/3.13, dependencies managed by `uv`.
 
 ```bash
-uv sync --all-extras --all-groups
-uv run pytest -q                 # ~25 s; the 2x2-lattice recovery test is marked `slow`
+just build --all-groups
+just test                        # ~25 s; the 2x2-lattice recovery test is marked `slow`
 uv run ruff check . && uv run ruff format --check . && uv run mypy
-uv run mkdocs build --strict
-uv run python examples/minimal_example.py
+just docs
+just example
 ```
 
 ## Layout

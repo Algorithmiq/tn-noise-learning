@@ -58,6 +58,7 @@ Changelog = "https://github.com/Algorithmiq/tn-noise-learning/releases"
 test = [
   "pytest>=8.2",
   "pytest-cov>=5",
+  "pytest-markdown-docs>=0.9",
 ]
 dev = [
   "ruff>=0.6",

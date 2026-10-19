@@ -25,7 +25,7 @@ is what gets learned. Gates may act on any pair of qubits, not only on topology 
 
 ## 2. Data
 
-```python
+```{.python continuation}
 from tn_noise_learning import NoiseDataset, sample_shots, two_qubit_depolarizing
 
 truth = two_qubit_depolarizing(topology, p=0.05, edges=[(0, 1), (2, 3)])
@@ -42,7 +42,7 @@ the ideal channel. Build one from your own experiment by filling those arrays; s
 
 ## 3. Model and training
 
-```python
+```{.python continuation}
 from tn_noise_learning import LPDO, Trainer, TrainingConfig
 
 model = LPDO.random(topology, bond_dim=4, kraus_dim=4, seed=0)
@@ -54,7 +54,7 @@ history = Trainer(TrainingConfig(epochs=30, batch_size=250)).fit(model, train, t
 the best epoch's tensors back into `model`. Every knob lives in
 [`TrainingConfig`][tn_noise_learning.trainer.TrainingConfig]; for example
 
-```python
+```{.python continuation}
 import optax
 
 TrainingConfig(
@@ -66,7 +66,7 @@ TrainingConfig(
 
 ## 4. Results
 
-```python
+```{.python continuation}
 history.plot("history.png")
 model.save("model.zarr")
 ```

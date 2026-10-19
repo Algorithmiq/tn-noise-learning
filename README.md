@@ -58,11 +58,9 @@ model.save("model.zarr")
 ## Develop
 
 ```bash
-uv sync --all-extras --all-groups
-uv run pre-commit install
-uv run pytest -q
-uv run ruff check . && uv run ruff format --check . && uv run mypy
-uv run mkdocs serve
+just build --all-groups   # uv sync with every extra and group
+just test                 # or: just test -m "not slow"
+just serve-docs
 ```
 
 ## References
