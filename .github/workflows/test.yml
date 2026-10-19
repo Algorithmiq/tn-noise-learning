@@ -51,7 +51,7 @@ jobs:
           files: pytest-${{ matrix.runner }}-${{ matrix.python-version }}.xml
           report_type: test_results
           disable_search: true
-          fail_ci_if_error: false
+          fail_ci_if_error: true
 
   tests:
     name: All tests
