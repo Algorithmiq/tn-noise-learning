@@ -5,8 +5,12 @@ max_retries = 2
 timeout = 20
 # rate limiting and crawler blocking (e.g. aps.org) are not broken links
 accept = [200, 403, 429]
+# mkdocs-material's 404 page uses root-relative links (/tn-noise-learning/...) that only resolve when served
+exclude_path = ["site/404.html"]
 exclude = [
   "^http://(localhost|127\\.0\\.0\\.1)",
   # the repository is private until launch; remove in Task 17
   "^https://github\\.com/Algorithmiq/tn-noise-learning",
+  # canonical/og self-links point at the deployed site, not this build; internal links are checked as files (and by mkdocs validation)
+  "^https://algorithmiq\\.github\\.io/tn-noise-learning",
 ]
