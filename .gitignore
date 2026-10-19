@@ -43,19 +43,9 @@ Thumbs.db
 *.swp
 *~
 .idea/
-# .vscode/ is intentionally tracked (committed settings)
+.vscode/
 
-# Project-specific: regenerable artefacts from the original sabrina workflow.
-# These are large / per-user and not source code.
-ctg_cache/
-opt_results/
-data/optimisation_data/
-data/simulated_experiments/
-
-# Large research artefacts inside examples/. These are paper-plot reference
-# data, not library inputs — kept out of git to stay under the 1MB pre-commit
-# threshold. Regenerate via examples/notebooks/generate_qpt_data.ipynb.
-examples/floquet/stefanos_data_from_*.json
-examples/**/*.json
-!examples/notebooks/*.json
-!examples/data/*.json
+# Project-specific
+docs/refs/
+*.zarr/
+examples/*.png

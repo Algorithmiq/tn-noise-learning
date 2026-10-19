@@ -1,77 +1,73 @@
 # tn-noise-learning
 
-Tensor-network learning of quantum noise channels (LPDO + MPO + JAX) for
-quantum process tomography.
+Learn the noise channel of a quantum circuit layer from measurement shots, with tensor networks.
 
-This is the engineered/reusable extract of the research codebase **SABRINA**
-(*Sensible Approach to Beat Ridiculously Impractical Noise-characterization
-Algorithms*).
+The channel is represented as a **locally purified density operator (LPDO)**: one Kraus tensor per qubit, joined
+by virtual bonds along a chosen **topology** (a 1D chain, a 2D square lattice, or any custom graph). The LPDO is
+completely positive by construction and is trained by maximum likelihood with JAX and optax, with a soft
+trace-preservation penalty. Datasets are plain [zarr](https://zarr.dev) groups.
 
 ## Install
 
 ```bash
-uv sync                  # runtime + tests
-uv sync --all-extras     # also include plotting helpers
+uv sync --all-extras   # library + plotting
 ```
 
-Python 3.12 is required. Pinned to the package versions sabrina was last
-validated against (numpy 2.3, qiskit 2.2, quimb 1.11, jax 0.9, optax 0.2.8,
-cotengra 0.7).
+Python 3.12 or 3.13.
 
-## What's here
-
-```
-src/tn_noise_learning/
-├── tn_core/        # LPDO super-operator class + MPO/LPDO utilities
-├── noise_models/   # Noise channel constructors (LPDO and MPO)
-├── qpt/            # QPT simulation pipeline + SPAM variant + data generation CLI
-├── training/       # JAX/optax optimisation of LPDO parameters
-├── io/             # JSON serialisation for experiments and results
-└── utils/          # PTM conversions and channel metrics
-```
-
-`examples/` holds the original research notebooks and per-figure analysis
-scripts, ported verbatim — see `examples/README.md`.
-
-## Quick start
+## Usage
 
 ```python
-import qiskit as qk
-from tn_noise_learning import (
-    select_noise_channel, build_qpt_mpo, simulate_experiments, train,
-)
+from qiskit import QuantumCircuit
+from tn_noise_learning import LPDO, NoiseDataset, Topology, Trainer, TrainingConfig, sample_shots, two_qubit_depolarizing
 
-# 1. Build the QPT MPO for an ideal circuit + a known noise model.
-qc = qk.QuantumCircuit(4)
-qc.cx(0, 1); qc.cx(2, 3)
-noise_mpo = select_noise_channel("even_depol1e-3_odd_depol5e-4", num_qubits=4, tensor_type="mpo")
-qpt_mpo, states, povms = build_qpt_mpo(qc_unitary=qc, noise_mpo=noise_mpo)
+topology = Topology.square(2, 2)                     # or Topology.chain(n), Topology.from_edges([...])
+circuit = QuantumCircuit(4)
+circuit.cz(0, 1)
+circuit.cz(2, 3)
 
-# 2. Sample synthetic measurement shots.
-experiments = simulate_experiments(qpt_mpo, num_shots=100)
+truth = two_qubit_depolarizing(topology, p=0.05, edges=[(0, 1), (2, 3)])
+sample_shots(truth, circuit, num_settings=300, shots_per_setting=100, seed=0).save("example.zarr")
 
-# 3. (or end-to-end) train an LPDO on a saved dataset:
-#    metrics = train("path/to/experiments.json")
+data = NoiseDataset.load("example.zarr")             # your own data goes in this format
+train, test = data.split(test_fraction=0.1, seed=0)
+
+model = LPDO.random(topology, bond_dim=4, kraus_dim=4, seed=0)
+history = Trainer(TrainingConfig(epochs=30, batch_size=250)).fit(model, train, test)
+
+history.plot("history.png")                          # loss, NLL, TP penalty, trace, distance to ideal (if known)
+model.save("model.zarr")
 ```
 
-CLI for synthetic data generation:
+`examples/minimal_example.py` is this script; it runs in under a minute.
 
-```bash
-uv run python -m tn_noise_learning.qpt.data_generation \
-    --num-qubits 6 --noise even_depol1e-3_odd_depol5e-4 \
-    --num-shots 5000 --strategy global_repeated
-```
+## What is in the box
+
+| Module | Purpose |
+| --- | --- |
+| `topology` | `Topology`: sites and bond edges; `chain`, `square`, `from_edges` |
+| `lpdo` | `LPDO`: Kraus tensors on a topology; random / identity init, trace, distance, dense form, zarr I/O |
+| `circuits` | Ideal circuit as a tensor network on any connectivity (operator-Schmidt gate decomposition) |
+| `dataset` | `NoiseDataset`: shot labels + single-qubit states/effects in zarr; `split`, `batches` |
+| `channels` | Noise channels as LPDOs: `depolarizing`, `pauli_channel`, `two_qubit_depolarizing`; Pauli eigenstates |
+| `simulate` | `sample_shots`: exact per-setting outcome distributions of a known channel |
+| `losses` | Transition probabilities, negative log-likelihood, trace-preservation penalty |
+| `trainer` | `TrainingConfig`, `Trainer`: jitted optax loop, L-BFGS-B warm start, early stopping, model selection |
+| `history`, `plotting` | `History` with zarr I/O and `plot_history` |
 
 ## Develop
 
 ```bash
-uv run pytest -q                # smoke tests
-uv run ruff check .             # lint
-uv run ruff format --check .    # formatting
-uv run mkdocs serve             # local docs preview
+uv sync --all-extras --all-groups
+uv run pre-commit install
+uv run pytest -q
+uv run ruff check . && uv run ruff format --check . && uv run mypy
+uv run mkdocs serve
 ```
 
-## Documentation
+## References
 
-Conceptual overview and full auto-generated API reference live in `docs/`.
-Build locally with `uv run mkdocs build`.
+- G. Torlai et al., *Quantum process tomography with unsupervised learning and tensor networks*,
+  [Nat. Commun. 14, 2858 (2023)](https://doi.org/10.1038/s41467-023-38332-9).
+- S. Mangini et al., *Tensor network noise characterization for near-term quantum computers*,
+  [arXiv:2402.08556](https://arxiv.org/abs/2402.08556).

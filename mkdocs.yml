@@ -1,17 +1,15 @@
 site_name: tn-noise-learning
-site_description: Tensor-network learning of quantum noise channels.
+site_description: Learn quantum noise channels from measurement shots with tensor networks.
+repo_url: https://github.com/Algorithmiq/TensorNetworksNoiseLearning
 
 watch:
   - src/tn_noise_learning
 
 nav:
   - Home: index.md
-  - Getting started: getting-started.md
-  - Concepts:
-      - LPDO: concepts/lpdo.md
-      - Noise channels: concepts/noise-channels.md
-      - QPT pipeline: concepts/qpt-pipeline.md
-      - Training: concepts/training.md
+  - Quickstart: quickstart.md
+  - Concepts: concepts.md
+  - Developer guide: developer.md
   - Code reference: reference/
 
 plugins:
