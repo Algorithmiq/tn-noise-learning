@@ -1,3 +1,17 @@
+# Copyright 2026 Algorithmiq
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 """Stochastic gradient descent on the Kraus tensors of an LPDO with optax and JAX."""
 
 from __future__ import annotations
@@ -29,7 +43,9 @@ Metric = Callable[[LPDO], float]
 
 def evaluate_schedule(schedule: Schedule, step: int) -> float:
     """Value of a constant or step-dependent schedule."""
-    return float(schedule(step)) if callable(schedule) else float(schedule)
+    if isinstance(schedule, Callable):
+        return float(schedule(step))
+    return float(schedule)
 
 
 @dataclass
@@ -61,8 +77,10 @@ class TrainingConfig:
 
     epochs: int = 50
     batch_size: int = 256
-    learning_rate: Schedule = field(default_factory=lambda: optax.exponential_decay(1e-2, 200, 0.8, end_value=1e-4))
-    optimizer: Callable[[Schedule], optax.GradientTransformation] = optax.adam
+    learning_rate: optax.ScalarOrSchedule = field(
+        default_factory=lambda: optax.exponential_decay(1e-2, 200, 0.8, end_value=1e-4)
+    )
+    optimizer: Callable[[optax.ScalarOrSchedule], optax.GradientTransformation] = optax.adam
     tp_weight: Schedule = 100.0
     tp_warmstart_steps: int = 500
     tp_project_every: int | None = None

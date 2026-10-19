@@ -58,11 +58,12 @@ Changelog = "https://github.com/Algorithmiq/tn-noise-learning/releases"
 test = [
   "pytest>=8.2",
   "pytest-cov>=5",
+  "pytest-markdown-docs>=0.9",
 ]
 dev = [
-  "ruff>=0.6",
-  "mypy>=1.10",
-  "pre-commit>=3.7",
+  "prek>=0.5",
+  "ruff==0.17.1",
+  "ty==0.0.89",
   { include-group = "test" },
 ]
 docs = [
@@ -98,12 +99,19 @@ exclude = [
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = ["--import-mode=importlib", "-ra", "--strict-markers", "--strict-config"]
+addopts = ["--import-mode=importlib", "-ra", "--showlocals", "--strict-markers", "--strict-config"]
 testpaths = ["tests"]
+xfail_strict = true
 markers = ["slow: mark test as slow (>= 10 s runtime)"]
+required_plugins = ["pytest-cov", "pytest-markdown-docs"]
 filterwarnings = [
+  "error",
   "ignore:Couldn't import `kahypar`:UserWarning",
   "ignore::DeprecationWarning:numpy.ctypeslib",
+  # cotengra's auto-hq path search forks a process pool inside multithreaded JAX (deadlock risk on Linux, Python < 3.14); to be tracked in an issue
+  "ignore:os.fork\\(\\) was called:RuntimeWarning",
+  # quimb's L-BFGS-B wrapper assigns ndarray.shape, deprecated in NumPy 2.5
+  "ignore:Setting the shape on a NumPy array has been deprecated:DeprecationWarning:quimb",
 ]
 
 
@@ -139,6 +147,8 @@ ignore = [
   "FBT001", "FBT002",   # boolean flags such as shuffle=True
   "RUF001", "RUF002", "RUF003",  # unicode math (Λ, ‖·‖, →) in docstrings and comments
 ]
+# do not autofix these: the fix deletes code
+unfixable = ["ERA", "F401", "F841", "T20"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "ANN", "S101", "INP001", "PLR0913", "PT011", "SLF001", "E731", "ARG"]
@@ -151,11 +161,8 @@ convention = "google"
 required-imports = ["from __future__ import annotations"]
 
 
-[tool.mypy]
-python_version = "3.12"
-files = ["src/tn_noise_learning"]
-ignore_missing_imports = true
-disallow_untyped_defs = true
-check_untyped_defs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = ["src", "tests/conftest.py", "examples", "docs/gen_ref_pages.py"]

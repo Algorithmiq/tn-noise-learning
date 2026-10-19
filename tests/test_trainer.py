@@ -1,16 +1,51 @@
+# Copyright 2026 Algorithmiq
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from __future__ import annotations
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
 from tn_noise_learning.lpdo import LPDO
 from tn_noise_learning.topology import Topology
-from tn_noise_learning.trainer import Trainer, TrainingConfig, project_trace_preserving
+from tn_noise_learning.trainer import (
+    Trainer,
+    TrainingConfig,
+    evaluate_schedule,
+    project_trace_preserving,
+)
 
 
 def small_config(**overrides):
     defaults = {"epochs": 2, "batch_size": 100, "tp_warmstart_steps": 20, "log_every": 1}
     return TrainingConfig(**(defaults | overrides))
+
+
+@pytest.mark.parametrize(
+    ("schedule", "expected"),
+    [
+        (2.0, 2.0),
+        (3, 3.0),
+        (np.float32(2.0), 2.0),
+        (np.int64(3), 3.0),
+        (jnp.asarray(2.0), 2.0),
+        (lambda step: 2.0 * step, 2.0),
+    ],
+)
+def test_evaluate_schedule_accepts_numpy_and_jax_scalars(schedule, expected):
+    assert evaluate_schedule(schedule, 1) == pytest.approx(expected)
 
 
 def test_project_trace_preserving_reduces_penalty():
