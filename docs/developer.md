@@ -24,7 +24,7 @@ examples/       minimal_example.py
 - Ruff (select = ["ALL"]) and ty run through prek; see [Contributing](contributing.md).
 - Pass `seed` arguments and use `np.random.default_rng`; never seed global state.
 - Tests mirror `src`; dense references use explicit Kraus sums and `qiskit.quantum_info.Operator`.
-- Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor!:`).
+- Commits and PR titles: see [Contributing](contributing.md#pull-requests).
 
 ## Extending
 

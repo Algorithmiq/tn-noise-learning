@@ -90,14 +90,17 @@ See the [contributing guide](https://algorithmiq.github.io/tn-noise-learning/con
 
 ## Contributing
 
-Read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request. Opening a pull request confirms that you agree to
-the [Contributor License Agreement](CLA.md).
+Read [CONTRIBUTING.md](https://github.com/Algorithmiq/tn-noise-learning/blob/main/CONTRIBUTING.md) before opening a
+pull request. Opening a pull request confirms that you agree to the
+[Contributor License Agreement](https://github.com/Algorithmiq/tn-noise-learning/blob/main/CLA.md).
 
 ## Citation
 
-If you use `tn-noise-learning` in your research, please cite it using [CITATION.cff](CITATION.cff) (GitHub's "Cite
-this repository" button), and the papers in the [references](https://algorithmiq.github.io/tn-noise-learning/references/).
+If you use `tn-noise-learning` in your research, please cite it using
+[CITATION.cff](https://github.com/Algorithmiq/tn-noise-learning/blob/main/CITATION.cff) (GitHub's "Cite this
+repository" button), and the papers in the [references](https://algorithmiq.github.io/tn-noise-learning/references/).
 
 ## License
 
-`tn-noise-learning` is released under the [Apache License 2.0](LICENSE).
+`tn-noise-learning` is released under the
+[Apache License 2.0](https://github.com/Algorithmiq/tn-noise-learning/blob/main/LICENSE).
