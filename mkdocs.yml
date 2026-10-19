@@ -16,9 +16,15 @@ watch:
 
 nav:
   - Home: index.md
+  - Installation: installation.md
   - Quickstart: quickstart.md
   - Concepts: concepts.md
-  - Developer guide: developer.md
+  - Developer guide:
+      - Contributing: contributing.md
+      - Architecture and extending: developer.md
+      - Testing: testing.md
+      - Documenting: documenting.md
+  - References: references.md
   - Code reference: reference/
 
 plugins:

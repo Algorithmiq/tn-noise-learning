@@ -12,7 +12,10 @@ keeps the channel trace preserving.
 Topology  ─►  LPDO  ─►  NoiseDataset (zarr)  ─►  Trainer  ─►  History.plot()
 ```
 
+- [Installation](installation.md): how to install the package.
 - [Quickstart](quickstart.md): the example script, step by step.
 - [Concepts](concepts.md): the LPDO, the probability network, the loss, how shots are simulated.
 - [Developer guide](developer.md): layout, conventions, how to extend.
+- [Contributing](contributing.md): development environment, everyday commands, pull requests.
+- [References](references.md): the papers this package builds on.
 - [Code reference](reference/tn_noise_learning/index.md): generated from the docstrings.

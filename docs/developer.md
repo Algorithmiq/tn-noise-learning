@@ -21,7 +21,7 @@ examples/       minimal_example.py
 ## Conventions
 
 - Google docstrings without types; full type hints; `from __future__ import annotations` in every module.
-- Ruff with `select = ["ALL"]` at 120 columns (see `pyproject.toml` for the few ignored rules); `print` is banned.
+- Ruff (select = ["ALL"]) and ty run through prek; see [Contributing](contributing.md).
 - Pass `seed` arguments and use `np.random.default_rng`; never seed global state.
 - Tests mirror `src`; dense references use explicit Kraus sums and `qiskit.quantum_info.Operator`.
 - Conventional commits (`feat:`, `fix:`, `docs:`, `chore:`, `refactor!:`).
