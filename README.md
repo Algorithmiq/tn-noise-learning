@@ -19,9 +19,17 @@ Python 3.12 or 3.13.
 
 ```python
 from qiskit import QuantumCircuit
-from tn_noise_learning import LPDO, NoiseDataset, Topology, Trainer, TrainingConfig, sample_shots, two_qubit_depolarizing
+from tn_noise_learning import (
+    LPDO,
+    NoiseDataset,
+    Topology,
+    Trainer,
+    TrainingConfig,
+    sample_shots,
+    two_qubit_depolarizing,
+)
 
-topology = Topology.square(2, 2)                     # or Topology.chain(n), Topology.from_edges([...])
+topology = Topology.square(2, 2)  # or Topology.chain(n), Topology.from_edges([...])
 circuit = QuantumCircuit(4)
 circuit.cz(0, 1)
 circuit.cz(2, 3)
@@ -29,13 +37,13 @@ circuit.cz(2, 3)
 truth = two_qubit_depolarizing(topology, p=0.05, edges=[(0, 1), (2, 3)])
 sample_shots(truth, circuit, num_settings=300, shots_per_setting=100, seed=0).save("example.zarr")
 
-data = NoiseDataset.load("example.zarr")             # your own data goes in this format
+data = NoiseDataset.load("example.zarr")  # your own data goes in this format
 train, test = data.split(test_fraction=0.1, seed=0)
 
 model = LPDO.random(topology, bond_dim=4, kraus_dim=4, seed=0)
 history = Trainer(TrainingConfig(epochs=30, batch_size=250)).fit(model, train, test)
 
-history.plot("history.png")                          # loss, NLL, TP penalty, trace, distance to ideal (if known)
+history.plot("history.png")  # loss, NLL, TP penalty, trace, distance to ideal (if known)
 model.save("model.zarr")
 ```
 
@@ -59,6 +67,8 @@ model.save("model.zarr")
 
 ```bash
 just build --all-groups   # uv sync with every extra and group
+uv run prek install       # git hooks
+just lint                 # every hook on every file
 just test                 # or: just test -m "not slow"
 just serve-docs
 ```

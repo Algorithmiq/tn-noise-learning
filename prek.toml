@@ -1,0 +1,58 @@
+default_language_version.python = "python3"
+default_stages = ["pre-commit", "pre-push"]
+
+[[repos]]
+repo = "builtin"
+hooks = [
+    { id = "check-added-large-files", args = ["--maxkb=1024"] },
+    { id = "check-case-conflict" },
+    { id = "check-merge-conflict" },
+    { id = "check-symlinks" },
+    { id = "check-toml" },
+    { id = "check-yaml", args = ["--allow-multiple-documents"] },
+    { id = "destroyed-symlinks" },
+    { id = "end-of-file-fixer", exclude = "\\.(json)$" },
+    { id = "mixed-line-ending" },
+    { id = "no-commit-to-branch", args = ["--pattern", "[^a-zA-Z0-9_/-]"] },
+    { id = "trailing-whitespace" },
+]
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+hooks = [
+    { id = "debug-statements" },
+    { id = "name-tests-test", args = ["--pytest-test-first"] },
+    { id = "forbid-submodules" },
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+rev = "v0.17.1"
+hooks = [
+    { id = "ruff-check" },
+    { id = "ruff-format", args = ["--check"] },
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/uv-pre-commit"
+rev = "0.13.1"
+hooks = [{ id = "uv-lock" }]
+
+[[repos]]
+repo = "https://github.com/Lucas-C/pre-commit-hooks"
+rev = "v1.5.6"
+hooks = [
+    { id = "insert-license", name = "check Python license header", types = ["python"], args = [
+        "--license-filepath", ".github/license-header.txt", "--comment-style", "#",
+    ] },
+]
+
+[[repos]]
+repo = "https://github.com/python-jsonschema/check-jsonschema"
+rev = "0.38.2"
+hooks = [
+    { id = "check-dependabot" },
+    { id = "check-github-workflows" },
+    { id = "check-github-actions" },
+]

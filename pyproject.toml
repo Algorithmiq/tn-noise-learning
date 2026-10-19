@@ -61,9 +61,9 @@ test = [
   "pytest-markdown-docs>=0.9",
 ]
 dev = [
-  "ruff>=0.6",
+  "prek>=0.5",
+  "ruff==0.17.1",
   "mypy>=1.10",
-  "pre-commit>=3.7",
   { include-group = "test" },
 ]
 docs = [
@@ -144,6 +144,9 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["D", "ANN", "S101", "INP001", "PLR0913", "PT011", "SLF001", "E731", "ARG"]
 "examples/**" = ["T201", "INP001", "D"]
+
+# do not autofix these: the fix deletes code
+unfixable = ["ERA", "F401", "F841", "T20"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"

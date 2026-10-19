@@ -14,6 +14,8 @@ Python 3.12/3.13, dependencies managed by `uv`.
 
 ```bash
 just build --all-groups
+uv run prek install              # git hooks
+just lint                        # every hook on every file
 just test                        # ~25 s; the 2x2-lattice recovery test is marked `slow`
 uv run ruff check . && uv run ruff format --check . && uv run mypy
 just docs
