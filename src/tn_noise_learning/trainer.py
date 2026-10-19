@@ -43,9 +43,9 @@ Metric = Callable[[LPDO], float]
 
 def evaluate_schedule(schedule: Schedule, step: int) -> float:
     """Value of a constant or step-dependent schedule."""
-    if isinstance(schedule, int | float):
-        return float(schedule)
-    return float(schedule(step))
+    if isinstance(schedule, Callable):
+        return float(schedule(step))
+    return float(schedule)
 
 
 @dataclass
