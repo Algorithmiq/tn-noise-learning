@@ -15,4 +15,4 @@ Topology  ─►  LPDO  ─►  NoiseDataset (zarr)  ─►  Trainer  ─►  Hi
 - [Quickstart](quickstart.md): the example script, step by step.
 - [Concepts](concepts.md): the LPDO, the probability network, the loss, how shots are simulated.
 - [Developer guide](developer.md): layout, conventions, how to extend.
-- [Code reference](reference/): generated from the docstrings.
+- [Code reference](reference/tn_noise_learning/index.md): generated from the docstrings.

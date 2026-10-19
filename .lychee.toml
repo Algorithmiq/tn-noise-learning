@@ -1,0 +1,12 @@
+# Link check of the built site (`just check-doc-links`, and lychee-action in docs.yml).
+fallback_extensions = ["html"]
+no_progress = true
+max_retries = 2
+timeout = 20
+# rate limiting and crawler blocking (e.g. aps.org) are not broken links
+accept = [200, 403, 429]
+exclude = [
+  "^http://(localhost|127\\.0\\.0\\.1)",
+  # the repository is private until launch; remove in Task 17
+  "^https://github\\.com/Algorithmiq/tn-noise-learning",
+]
