@@ -1,5 +1,10 @@
 # tn-noise-learning
 
+[![Tests](https://github.com/Algorithmiq/tn-noise-learning/actions/workflows/test.yml/badge.svg)](https://github.com/Algorithmiq/tn-noise-learning/actions/workflows/test.yml)
+[![Documentation](https://github.com/Algorithmiq/tn-noise-learning/actions/workflows/docs.yml/badge.svg)](https://algorithmiq.github.io/tn-noise-learning/)
+[![codecov](https://codecov.io/gh/Algorithmiq/tn-noise-learning/graph/badge.svg)](https://codecov.io/gh/Algorithmiq/tn-noise-learning)
+[![PyPI](https://img.shields.io/pypi/v/tn-noise-learning)](https://pypi.org/project/tn-noise-learning/)
+
 Learn the noise channel of a quantum circuit layer from measurement shots, with tensor networks.
 
 The channel is represented as a **locally purified density operator (LPDO)**: one Kraus tensor per qubit, joined
@@ -7,13 +12,20 @@ by virtual bonds along a chosen **topology** (a 1D chain, a 2D square lattice, o
 completely positive by construction and is trained by maximum likelihood with JAX and optax, with a soft
 trace-preservation penalty. Datasets are plain [zarr](https://zarr.dev) groups.
 
-## Install
+> [!WARNING]
+> This package is under active development and follows [Semantic Versioning](https://semver.org/). While in `0.x.y`,
+> breaking changes may occur in minor releases. Pin your version if you depend on it.
+
+📖 **Documentation:** <https://algorithmiq.github.io/tn-noise-learning/>
+
+## Installation
 
 ```bash
-uv sync --all-extras   # library + plotting
+pip install tn-noise-learning           # or: uv add tn-noise-learning
+pip install "tn-noise-learning[plot]"   # with plotting
 ```
 
-Python 3.12 or 3.13.
+Python 3.12 to 3.15.
 
 ## Usage
 
@@ -63,21 +75,32 @@ model.save("model.zarr")
 | `trainer` | `TrainingConfig`, `Trainer`: jitted optax loop, L-BFGS-B warm start, early stopping, model selection |
 | `history`, `plotting` | `History` with zarr I/O and `plot_history` |
 
-## Develop
+## Development
+
+The repository ships a devcontainer and a Nix dev shell; with neither, install [uv](https://docs.astral.sh/uv/)
+and [just](https://github.com/casey/just):
 
 ```bash
-just build --all-groups   # uv sync with every extra and group
-uv run prek install       # git hooks
-just lint                 # every hook on every file
-just test                 # or: just test -m "not slow"
-just serve-docs
+just build --all-groups && uv run prek install
+just test
+just lint
 ```
 
-## References
+See the [contributing guide](https://algorithmiq.github.io/tn-noise-learning/contributing/).
 
-- G. Torlai et al., *Quantum process tomography with unsupervised learning and tensor networks*,
-  [Nat. Commun. 14, 2858 (2023)](https://doi.org/10.1038/s41467-023-38332-9).
-- S. Mangini et al., *Tensor network noise characterization for near-term quantum computers*,
-  [Phys. Rev. Research 6, 033217](https://doi.org/10.1103/PhysRevResearch.6.033217).
-- N. M. M. Fernàndez et al., *Development and experimental implementation of noise characterisation techniques on a superconducting quantum processor*,
-  [arxiv.org:2610.18000](https://arxiv.org/abs/2610.18000).
+## Contributing
+
+Read [CONTRIBUTING.md](https://github.com/Algorithmiq/tn-noise-learning/blob/main/CONTRIBUTING.md) before opening a
+pull request. Opening a pull request confirms that you agree to the
+[Contributor License Agreement](https://github.com/Algorithmiq/tn-noise-learning/blob/main/CLA.md).
+
+## Citation
+
+If you use `tn-noise-learning` in your research, please cite it using
+[CITATION.cff](https://github.com/Algorithmiq/tn-noise-learning/blob/main/CITATION.cff) (GitHub's "Cite this
+repository" button), and the papers in the [references](https://algorithmiq.github.io/tn-noise-learning/references/).
+
+## License
+
+`tn-noise-learning` is released under the
+[Apache License 2.0](https://github.com/Algorithmiq/tn-noise-learning/blob/main/LICENSE).

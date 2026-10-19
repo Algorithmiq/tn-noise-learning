@@ -1,15 +1,30 @@
 site_name: tn-noise-learning
 site_description: Learn quantum noise channels from measurement shots with tensor networks.
+site_url: https://algorithmiq.github.io/tn-noise-learning/
 repo_url: https://github.com/Algorithmiq/tn-noise-learning
+repo_name: Algorithmiq/tn-noise-learning
+edit_uri: edit/main/docs/
+
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
+  anchors: warn
 
 watch:
   - src/tn_noise_learning
 
 nav:
   - Home: index.md
+  - Installation: installation.md
   - Quickstart: quickstart.md
   - Concepts: concepts.md
-  - Developer guide: developer.md
+  - Developer guide:
+      - Contributing: contributing.md
+      - Architecture and extending: developer.md
+      - Testing: testing.md
+      - Documenting: documenting.md
+  - References: references.md
   - Code reference: reference/
 
 plugins:
