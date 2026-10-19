@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation
+    url: https://algorithmiq.github.io/tn-noise-learning/
+    about: Check the documentation before opening an issue.
+  - name: Questions
+    url: https://github.com/Algorithmiq/tn-noise-learning/discussions
+    about: Ask usage questions in Discussions.

@@ -1,0 +1,53 @@
+name: Quality Assurance
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 3
+  COLUMNS: 120
+
+jobs:
+  coverage:
+    name: Coverage and SonarQube analysis
+    runs-on: ubuntu-26.04
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up the build environment
+        uses: ./.github/actions/setup
+        with:
+          # coverage and Sonar come from one interpreter; the test matrix covers the others
+          python-version: "3.14"
+
+      - name: Install package
+        run: just build
+
+      - name: Collect coverage
+        run: just coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7.1.1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.xml
+          disable_search: true
+          fail_ci_if_error: true
+
+      # Secrets are not available to PRs from forks.
+      - name: SonarQube Scan
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: SonarSource/sonarqube-scan-action@v8.3.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
