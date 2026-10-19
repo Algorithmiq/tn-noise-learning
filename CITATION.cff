@@ -6,6 +6,8 @@ abstract: "Learn the noise channel of a quantum circuit layer from measurement s
 authors:
   - family-names: "Grieco"
     given-names: "Francesco"
+  - family-names: "Mangini"
+    given-names: "Stefano"
 license: Apache-2.0
 repository-code: "https://github.com/Algorithmiq/tn-noise-learning"
 url: "https://algorithmiq.github.io/tn-noise-learning/"
