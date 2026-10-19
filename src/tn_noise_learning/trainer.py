@@ -43,7 +43,9 @@ Metric = Callable[[LPDO], float]
 
 def evaluate_schedule(schedule: Schedule, step: int) -> float:
     """Value of a constant or step-dependent schedule."""
-    return float(schedule(step)) if callable(schedule) else float(schedule)
+    if isinstance(schedule, int | float):
+        return float(schedule)
+    return float(schedule(step))
 
 
 @dataclass
@@ -75,8 +77,10 @@ class TrainingConfig:
 
     epochs: int = 50
     batch_size: int = 256
-    learning_rate: Schedule = field(default_factory=lambda: optax.exponential_decay(1e-2, 200, 0.8, end_value=1e-4))
-    optimizer: Callable[[Schedule], optax.GradientTransformation] = optax.adam
+    learning_rate: optax.ScalarOrSchedule = field(
+        default_factory=lambda: optax.exponential_decay(1e-2, 200, 0.8, end_value=1e-4)
+    )
+    optimizer: Callable[[optax.ScalarOrSchedule], optax.GradientTransformation] = optax.adam
     tp_weight: Schedule = 100.0
     tp_warmstart_steps: int = 500
     tp_project_every: int | None = None

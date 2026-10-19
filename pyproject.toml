@@ -63,7 +63,7 @@ test = [
 dev = [
   "prek>=0.5",
   "ruff==0.17.1",
-  "mypy>=1.10",
+  "ty==0.0.89",
   { include-group = "test" },
 ]
 docs = [
@@ -154,11 +154,8 @@ convention = "google"
 required-imports = ["from __future__ import annotations"]
 
 
-[tool.mypy]
-python_version = "3.12"
-files = ["src/tn_noise_learning"]
-ignore_missing_imports = true
-disallow_untyped_defs = true
-check_untyped_defs = true
-warn_redundant_casts = true
-warn_unused_ignores = true
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.ty.src]
+include = ["src", "tests/conftest.py", "examples", "docs/gen_ref_pages.py"]

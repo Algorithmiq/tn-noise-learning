@@ -35,6 +35,11 @@ hooks = [
 ]
 
 [[repos]]
+repo = "https://github.com/astral-sh/ty-pre-commit"
+rev = "v0.0.89"
+hooks = [{ id = "ty" }]
+
+[[repos]]
 repo = "https://github.com/astral-sh/uv-pre-commit"
 rev = "0.13.1"
 hooks = [{ id = "uv-lock" }]

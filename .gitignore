@@ -25,7 +25,6 @@ htmlcov/
 .hypothesis/
 
 # Type checkers
-.mypy_cache/
 .ruff_cache/
 .pyre/
 
