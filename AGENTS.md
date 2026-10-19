@@ -10,7 +10,7 @@ trace-preservation penalty. Pipeline: `Topology -> LPDO -> NoiseDataset (zarr) -
 
 ## Environment
 
-Python 3.12/3.13, dependencies managed by `uv`.
+Python 3.12–3.15, dependencies managed by `uv`.
 
 ```bash
 just build --all-groups          # uv sync, every extra and group
