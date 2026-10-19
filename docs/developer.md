@@ -39,4 +39,5 @@ examples/       minimal_example.py
 
 ## Release
 
-Bump `version` in `pyproject.toml` and `__version__` in `__init__.py`, tag `vX.Y.Z`, and publish a GitHub release.
+The version comes from git tags (hatch-vcs). Publish a GitHub release with a new tag `vX.Y.Z` on `main`; the
+`deploy.yml` workflow builds the sdist and wheel, checks that the version matches the tag, and uploads to PyPI.
