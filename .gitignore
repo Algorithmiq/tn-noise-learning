@@ -43,7 +43,6 @@ Thumbs.db
 *.swp
 *~
 .idea/
-.vscode/
 
 # Project-specific
 docs/refs/
