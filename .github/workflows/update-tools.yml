@@ -58,7 +58,7 @@ jobs:
 
       - name: Create pull request
         if: steps.versions.outputs.latest != steps.versions.outputs.current
-        uses: peter-evans/create-pull-request@v8.1.1
+        uses: peter-evans/create-pull-request@v8.1.3
         with:
           token: ${{ secrets.APPROVE_AUTO_MERGE_PAT }}
           draft: ${{ steps.check.outcome == 'failure' }}
