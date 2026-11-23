@@ -63,7 +63,7 @@ test = [
 dev = [
   "prek>=0.5",
   "ruff==0.17.1",
-  "ty==0.0.89",
+  "ty==0.0.95",
   { include-group = "test" },
 ]
 docs = [
