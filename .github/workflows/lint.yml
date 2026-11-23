@@ -26,7 +26,7 @@ jobs:
         run: just build --all-groups
 
       - name: Run prek
-        uses: j178/prek-action@v3.1.0
+        uses: j178/prek-action@v3.1.1
         env:
           RUFF_OUTPUT_FORMAT: github
           TY_OUTPUT_FORMAT: github
